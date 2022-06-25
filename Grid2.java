@@ -100,9 +100,9 @@ public class Grid2 {
     static public void showd1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
 	int n = grid[i][j].direction;
-	if ( 0 == n ) System.out.print("  ");
-	else if ( 1 == n ) System.out.print(" f"); 
-	else System.out.print(" b"); 
+	if ( 0 == n ) System.out.print("   ");
+	else if ( 1 == n ) System.out.print("  f"); 
+	else System.out.print("  b"); 
     } //
     static public void showd() {
 	for ( int j = 0; j < lx; j++ ) {
