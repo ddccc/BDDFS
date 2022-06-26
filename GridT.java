@@ -177,9 +177,9 @@ class NodegT {
 	// System.out.println("NodegT bsx.pos " + bsx.pos);
 	fs = ssx; bs = bsx;
 	// Choose one of the three
-	moveForward = true; // unidirectional search
+	// moveForward = true; // unidirectional search
 	// moveForward = false; // unidirectional search
-        // eForward = (GridT.fPathLng <= GridT.bPathLng); // bidirectional search
+        moveForward = (GridT.fPathLng <= GridT.bPathLng); // bidirectional search
 
 	// findMoves sets numMoves and puts in moves candidate moves
 	if ( moveForward ) GridT.findMoves(fs, 1); else GridT.findMoves(bs, -1);
