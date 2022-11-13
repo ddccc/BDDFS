@@ -1,6 +1,8 @@
-// File: c:/ddc/Java/Knight/Grid3.java
-// Date: Mon May 16 09:03:27 2022, Sat Nov 12 21:07:44 2022
+// File: c:/ddc/Java/Knight/Grid4.java
+// Date: Sun Aug 28 09:17:20 2022, Sun Nov 13 09:40:48 2022
 // (C) OntoOO/ Dennis de Champeaux
+import java.io.*;
+import java.util.*;
 
 /*
   This code is parametrized regarding::
@@ -12,12 +14,6 @@
         (hampering is adding moves in the wrong direction)
      Restore or not the search space after a recursive call
  */
-
-
-import java.io.*;
-import java.util.*;
-
-
 /*
 Y
          North
@@ -25,79 +21,84 @@ Y
          South  
 0-0                  X
  */
-/* Grid2 like version but inserts a barrier in the middle
- */
-public class Grid3 {
+/*
+    This is a two barrier version 
+*/
+public class Grid4 {
     // static Date date = new Date();
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
     // static Random random = new Random(771); // repeatable results
+    static final int lx = 5;
     // static final int lx = 6; 
-    // static final int ly = 10;
-    // static final int ly = 12;
-    // static final int ly = 45;
-    // static final int ly = 50;
-    // static final int ly = 55;
-    // static final int ly = 60;
-    // static final int ly = 65;
-    // static final int ly = 70;
-    // static final int ly = 75;
-    // static final int ly = 80;
-    // static final int ly = 85;
-    // static final int ly = 90;
-    // static final int ly = 95;
-    // static final int ly = 100;
-
+    // static final int lx = 10; 
+    // static final int lx = 15; 
+    // static final int lx = 20; 
+    // static final int lx = 25; 
+    // static final int lx = 30; 
+    // static final int lx = 35; 
+    // static final int lx = 40; 
+    // static final int lx = 50; 
+    // static final int lx = 80; 
+    // static final int lx = 100; 
+    // static final int lx = 120; 
+    // static final int lx = 140; 
+    // static final int lx = 200; 
 
     // static final int ly = lx;
-    // static final int lx = 5;   
-    // static final int lx = 10;   
-    // static final int lx = 15;   
-    // static final int lx = 20;   
-    // static final int lx = 25;   
-    // static final int lx = 30;   
-    // static final int lx = 35;   
-    // static final int lx = 40;   
-    // static final int lx = 45;   
-    // static final int lx = 50;   
 
-    // static final int lx = 100;   
-    // static final int lx = 200;   
-    // static final int lx = 300;   
-    // static final int lx = 400;   
-    // static final int lx = 500;   
-    // static final int lx = 600;   
-    // static final int lx = 700;   
-    // static final int lx = 800;   
-    // static final int lx = 900;   
-    static final int lx = 1000;   
-    static final int ly = 2000;
+    static final int ly = 12;
+    // static final int ly = 20;
+    // static final int ly = 25;
+    // static final int ly = 30;
 
-    // static final int lx = 400;   
+    // static final int ly = 100;
+    // static final int ly = 150;
+    // static final int ly = 200;
+    // static final int ly = 250;
+    // static final int ly = 300;
     // static final int ly = 400;
+    // static final int ly = 800;
+    // static final int ly = 1600;
+    // static final int ly = 2000;
+    // static final int ly = 3200;
+    // static final int ly = 6400;
+    // static final int ly = 12800;
+    
+    // static final int ly = 2100; // 
+    // static final int ly = 1800; 
 
 
-    static GN3 [][] grid = new GN3[lx][ly];
+    static GN4 [][] grid = new GN4[lx][ly];
     static int moveCnt = 0; 
     static int solutionCnt = 0; 
     static int fCnt = 1;
     static int bCnt = 1;
-    static int fPathLng = 0;
-    static int bPathLng = 0;
     static int depth = 0;
 
-    static int midpointx = lx/2;
-    static int midpointy = ly/2;
+    static int bx = ly/3;
+    static int barrier1 = bx - 1;
+    static int barrier2 = ly - bx;
+
+
+    // select one
+    static boolean bidirection = true;
+    // static boolean bidirection = false;
+
+    static Hashtable<GN4,String> locations = new Hashtable<GN4,String>();
+
 
     static boolean done = false; // for terminating when a solution is found
     static boolean moveForward = false; 
 
-    static Hashtable<GN3,String> locations = new Hashtable<GN3,String>();
 
     public static void main(String[] args) {
-	// try{
+	System.out.println("bidirection " + bidirection +
+			   " lx " + lx +
+			   " ly " + ly + " barrier1 " + barrier1 + 
+			   " barrier2 " + barrier2);
 	for ( int i = 0; i < lx; i++ )
-	    for ( int j = 0; j < ly; j++ ) grid[i][j] = new GN3();
+	    for ( int j = 0; j < ly; j++ ) grid[i][j] = new GN4();
 	for ( int i = 0; i < lx; i++ ) {
 	    if ( 0 == i ) {
 		for ( int j = 0; j < ly; j++ ) {
@@ -129,68 +130,82 @@ public class Grid3 {
 		}	
 	    }
 	}
-	// make barrier
-	System.out.println("lx " + lx + " ly " + ly);
-	System.out.println("midpointx " + midpointx + " midpointy " + midpointy);
+	// make barriers
+	for ( int k = 0; k < lx-1; k++ ) {
+	    grid[k][barrier1].south = null; 
+	    grid[k][barrier1-1].north = null; 
+	}
+	// grid[lx-1][barrier1].east = null;
 
-	for ( int k = 0; k < lx; k++ )
-	    if ( k != midpointx ) {
-		grid[k][midpointy].north = null; 
-		grid[k][midpointy].south = null; 
-	    }
-	grid[midpointx][midpointy].east = null;
-	grid[midpointx][midpointy].west = null;
+	for ( int k = 1; k < lx; k++ ) {
+	    grid[k][barrier2].north = null; 
+	    grid[k][barrier2+1].south = null; 
+	}
+	// grid[0][barrier2].west = null;
 
 	for ( int i = 0; i < lx; i++ ) 
 	    for ( int j = 0; j < ly; j++ ) {
-		GN3 gnij = grid[i][j];
+		GN4 gnij = grid[i][j];
 		gnij.x = i; gnij.y = j;
 		gnij.id = i + "-" + j;
 		findMoves(gnij, 0);
 	    }
-	/*
-	// check the new barrier
+    /*
+	// check the new barriers
 	for ( int k = 0; k < lx; k++ ) {
 	    System.out.print(k + " ");
-	    GN3 gnj = grid[k][midpointy];
+	    GN4 gnj = grid[k][barrier2]; // or barrier1
 	    System.out.print("north " + gnj.north);
 	    System.out.println(" south " + gnj.south);
 	    System.out.print(" west " + gnj.west);
 	    System.out.println(" east " + gnj.east);
 	    System.out.println();
 	}
+	// */
+	/*
+	int x = barrier1; int y = barrier1-1; 
+	System.out.print("barrier1 " +  barrier1 + " " + (barrier1-1) +
+			 " barrier2 " +  barrier2 + " " + (barrier2+1));
+	System.out.println();
 	*/
 
-
-	GN3 startState = grid[0][0]; startState.fPathLng = 0; 
+	GN4 startState = grid[0][0]; startState.fPathLng = 0; 
 	startState.direction = 1; startState.pos = 1; startState.visited = "+";
 	locations.put(startState, "+");
-	GN3 goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
-	// GN3 goalState = grid[0][ly-1]; goalState.bPathLng = 0;
+	GN4 goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
+	// GN4 goalState = grid[0][ly-1]; goalState.bPathLng = 0;
 	goalState.direction = -1; goalState.pos = 1; goalState.visited = "-";
 	locations.put(goalState, "-");
-	showg(startState); showg(goalState); 
-	System.out.println();
-	// System.exit(0);	
-	Nodeg3 initNode = new Nodeg3(startState, goalState);
+	// showg(startState); showg(goalState); 
+	// System.out.println();
+	// showd(); showv(); 
+	// System.exit(0);
+
+	Nodeg4 initNode = new Nodeg4(startState, goalState);
 	long startTime = System.currentTimeMillis();
 	initNode.move();
+
 	long endTime = System.currentTimeMillis();
 	System.out.println("\ntiming " + (endTime-startTime));
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
-	/*
-	show();
-	showd();
-	showv();
-	System.out.println("Grid3.fCnt " + Grid3.fCnt + 
-			   " Grid3.bCnt " + Grid3.bCnt);
+	// /*
+	// show();
+	System.out.println();
+	show();  // pos numbers
+	showd(); // f & b
+	showv(); // + & -
+	// System.out.println("\nGrid4.fCnt " + Grid4.fCnt + 
+	//	   " Grid4.bCnt " + Grid4.bCnt);
 	// */
+
     } // end main
+
 
     static public void show1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
 	int n = grid[i][j].pos;
+	// System.out.print( (n < 10 ? " " + n : n) + " ");
 	if ( 0 == n ) System.out.print("   "); else
 	    System.out.print( (n < 10 ? "  " + n : " " + n));
     } // show1
@@ -201,13 +216,15 @@ public class Grid3 {
 	}
     } // end show
 
+    /*
     static public void showm() {
 	for ( int j = 0; j < lx; j++ ) {
-	    for ( int i = midpointy-1; i <= midpointy-1; i++ ) 
-		showd1(j, i);
+	    // for ( int i = midpointy-1; i <= midpointy-1; i++ ) 
+	    //         showd1(j, i);
 	    System.out.println();
 	}
     } // end showm
+    */
     static public void showd1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
 	int n = grid[i][j].direction;
@@ -223,14 +240,11 @@ public class Grid3 {
     } // end showd
 
     static public void showv1(int i, int j) {
-
 	String s = grid[i][j].visited;
-	// System.out.print("  " + s);
-	// /*
 	if ( s.equals(" ") ) System.out.print("   ");
 	else if ( s.equals("+") ) System.out.print("  +"); 
-	else System.out.print("  -"); 
-	     // */
+	else if ( s.equals("-") ) System.out.print("  -"); 
+	else System.out.print("   "); 
     } // showv1
     static public void showv() {
 	for ( int j = 0; j < lx; j++ ) {
@@ -239,24 +253,24 @@ public class Grid3 {
 	}
     } // end showv
 
-    static public void showg(GN3 gn) {
+    static public void showg(GN4 gn) {
 	System.out.println(gn.id);
 	System.out.println("direction " + gn.direction);
 	int numMoves = gn.getNumMoves();
 	System.out.println("numMoves " + numMoves);
-	GN3 [] moves = gn.getMoves();
+	GN4 [] moves = gn.getMoves();
 	for (int k = 0; k < numMoves; k++) {
 	    System.out.print(k + " ");
-	    GN3 gnk = moves[k];
+	    GN4 gnk = moves[k];
 	    System.out.print(gnk.id + " ");
 	}
 	System.out.println();
     }
 
-    static void findMoves(GN3 gn, int dr) {
+    static void findMoves(GN4 gn, int dr) {
 	// set numMovesand puts in moves candidate moves
 	gn.numMoves = 0;
-	GN3 gnn = gn.north;
+	GN4 gnn = gn.north;
 	if ( null != gnn && dr != -1 ) { 
 	    gn.moves[gn.numMoves] = gnn; gn.numMoves++; }
 	gnn = gn.south;
@@ -271,119 +285,136 @@ public class Grid3 {
 	scramble(gn.numMoves, gn.moves); // optional
     } // end findMoves
     // /*
-    static void scramble(int numMoves, GN3 [] moves) { 
+    static void scramble(int numMoves, GN4 [] moves) { 
 	// change order of the candidate moves in a GN
 	// System.out.println("scramble numMoves " + numMoves);
 	for (int i = 0; i < numMoves; i++) {
 	    int a = random.nextInt(numMoves);
 	    int b = random.nextInt(numMoves);
 	    // System.out.println("scramble a b " + a + " " + b);
-	    GN3 t = moves[a]; moves[a] = moves[b]; moves[b] = t;
+	    GN4 t = moves[a]; moves[a] = moves[b]; moves[b] = t;
 	}
     } // end scramble()
     // */
-} // end Grid3
+} // end Grid4
 
-class Nodeg3 { 
-    private GN3 fs, bs, gn;
+class Nodeg4 { 
+    private GN4 fs, bs, gn;
     protected boolean moveForward = false;
     protected int numMoves = 0;
-    protected GN3 [] moves = new GN3[4];
-    Nodeg3(GN3 ssx, GN3 bsx) {
-	Grid3.moveCnt++;
+    protected GN4 [] moves = new GN4[4];
+    Nodeg4(GN4 ssx, GN4 bsx) {
+	Grid4.depth++;
+	Grid4.moveCnt++;
 	fs = ssx; bs = bsx;
-	// Choose one of the three
+	// Choose one of the four
         // moveForward = true; // unidirectional search
 	// moveForward = false; // unidirectional search
-        // moveForward = (Grid3.fPathLng <= Grid3.bPathLng); // bidirectional search +
-	// moveForward = (Grid3.fCnt <= Grid3.bCnt); // bidirectional search
-	// or:
-	Grid3.moveForward = !Grid3.moveForward;
-	moveForward = Grid3.moveForward; // bidirectional search
+        // moveForward = (Grid4.fPathLng <= Grid4.bPathLng); // bidirectional search +
+	// moveForward = (Grid4.fCnt <= Grid4.bCnt); // bidirectional search
+	// OR for bidirectional:
+	Grid4.moveForward = !Grid4.moveForward;
+	moveForward = Grid4.moveForward; // bidirectional search
+
+	// System.out.println("\nGrid4.moveCnt " + Grid4.moveCnt);
+	// System.out.println("moveForward " + moveForward);
+	// Grid4.show();
+	// if ( 13 < Grid4.moveCnt ) System.exit(0);
 
 	// findMoves sets numMoves and puts in moves candidate moves
 	// both directions easied
-	if ( moveForward ) Grid3.findMoves(fs, 1); else Grid3.findMoves(bs, -1);
+	if ( moveForward ) Grid4.findMoves(fs, 1); else Grid4.findMoves(bs, -1);
 	// both directions hampered
-	// if ( moveForward ) Grid3.findMoves(fs, 2); else Grid3.findMoves(bs, -2);
+	// if ( moveForward ) Grid4.findMoves(fs, 2); else Grid4.findMoves(bs, -2);
     }
     public void move() {
-	if ( Grid3.done ) return; // terminate
-	Grid3.depth++;
+	if ( Grid4.done ) {
+	    Grid4.depth--;
+	    return; // terminate
+	}
 	gn = ( moveForward ? fs : bs );
 	/* // do not activate for uni-directional search
 	if ( moveForward ) {
-	    if ( Grid3.midpointy + 1 <= gn.y ) return;
+	    if ( Grid4.midpointy + 1 <= gn.y ) return;
 	} else {
-	    if ( gn.y <= Grid3.midpointy -1) return;
+	    if ( gn.y <= Grid4.midpointy -1) return;
 	}
 	*/
 	boolean trace = false;
 	numMoves = gn.getNumMoves();
-	if (trace) System.out.println("\nGrid3.moveCnt " + Grid3.moveCnt);
+	if (trace) System.out.println("\nGrid4.moveCnt " + Grid4.moveCnt);
 	if (trace) System.out.println("gn.id " + gn.id);
 	if (trace) System.out.println("gn.pos " + gn.pos);
 	if (trace) System.out.println("numMoves " + numMoves);
 	if (trace) System.out.println("moveForward " + moveForward);
-	if (trace) System.out.println("Grid3.depth " + Grid3.depth);
-	if (trace) System.out.println("Grid3.fCnt " + Grid3.fCnt + 
-				      " Grid3.bCnt " + Grid3.bCnt);
-	if (trace) { Grid3.show(); Grid3.showd(); }
+	if (trace) System.out.println("Grid4.depth " + Grid4.depth);
+	if (trace) System.out.println("Grid4.fCnt " + Grid4.fCnt + 
+				      " Grid4.bCnt " + Grid4.bCnt);
+	// trace = false;
+	if (trace) { Grid4.show(); Grid4.showd(); }
 
-	GN3 [] moves = gn.getMoves();
+	GN4 [] moves = gn.getMoves();
 	if ( moveForward ) {
 	    for (int k = 0; k < numMoves; k++) {
-		GN3 gnk = moves[k];
+		GN4 gnk = moves[k];
 		if (trace) System.out.println("move f k gnk " + k + " " + gnk.id);
 		if (trace) System.out.println("gnk.id " + gnk.id);
 		if (trace) System.out.println("gnk.direction " + gnk.direction);
 		if (trace) System.out.println("gnk.pos " + gnk.pos);
-		String direction = Grid3.locations.get(gnk);
+		String direction = Grid4.locations.get(gnk);
 		if ( null == direction ) { // not visited
 		    // System.out.println("move f GO DEEPER " + gnk.id);
-		    Grid3.locations.put(gnk, "+");
-		    Grid3.fCnt++;
-		    gnk.pos = Grid3.fCnt;
+		    Grid4.locations.put(gnk, "+");
+		    Grid4.fCnt++;
+		    gnk.pos = Grid4.fCnt;
 		    // gnk.fPathLng = gn.fPathLng+1;
 		    gnk.direction = 1; 
 		    gnk.parent = gn;
 		    gnk.visited = "+"; 
-		    // Grid3.fPathLng++;
-		    (new Nodeg3(gnk, bs)).move();
-		    // System.out.println("move f back from recursion " + Grid3.depth);
-		    if ( Grid3.done ) { 
-			Grid3.depth--;
+		    // Grid4.fPathLng++;
+		    (new Nodeg4(gnk, bs)).move();
+		    // System.out.println("move f back from recursion " + Grid4.depth);
+		    if ( Grid4.done ) { 
+			Grid4.depth--;
 			return;
 		    }
-		    // Grid3.locations.remove(gnk);
-		    /*  do (NOT) restore
+		    // Grid4.locations.remove(gnk);
+		    /* // do (NOT) restore
 		    gnk.pos = 0;
 		    gnk.parent = null;
 		    gnk.direction = 0;
 		    // gnk.fPathLng = gn.fPathLng-1;
-		    Grid3.fCnt--;
+		    Grid4.fCnt--;
 		    // */
-		    // Grid3.fPathLng--;
+		    // Grid4.fPathLng--;
 		    continue;
 		}
 		if ( direction.equals("+") ) continue; // visited earlier
+
 		// a solution
-		/*
-		    System.out.println();
-		    System.out.println("Grid3.moveCnt " + Grid3.moveCnt);
-		    System.out.println("f id " + gn.id + " pos " + gn.pos);
-		    System.out.println("f id " + gnk.id + " pos " + gnk.pos);
-		    Grid3.show(); 
-		    Grid3.showd(); 
-		    // */
-		    Grid3.solutionCnt++;
-		    { Grid3.done = true; break; } // terminate with 1 solution
 		    /*
-		    System.out.println("----------- moveCnt " + Grid3.moveCnt);
-		    System.out.println("move f FOUND SOLUTION # " + Grid3.solutionCnt);
+		    System.out.println();
+		    System.out.println("***********SOLUTION");
+		    System.out.println("Grid4.moveCnt " + Grid4.moveCnt);
+		    System.out.println("f id " + gnk.id + " pos " + gnk.pos);
+		    System.out.println("Grid4.fCnt + Grid4.bCnt " + 
+				       (Grid4.fCnt + Grid4.bCnt));
+		    Grid4.show(); 
+		    Grid4.showd(); 
+		    Grid4.showv(); 
+		    // Grid4.closef();
+		    System.exit(0);
+		    // */
+		    // Grid4.show(); 
+		    // Grid4.showd(); 
+		    Grid4.solutionCnt++;
+		    Grid4.done = true; // terminate when a solution is found
+		    /*
+		    System.out.println("----------- moveCnt " + Grid4.moveCnt);
+		    System.out.println("move f FOUND SOLUTION # " + Grid4.solutionCnt);
 		    // print the paths
 		    System.out.println("move other side: " + gnk.id);
-		    GN3 z = gnk.parent; 
+		    GN4 z = gnk.parent; 
 		    while (true) {
 			if ( null == z ) break;
 			System.out.println("move b z  " + z.id);
@@ -396,111 +427,118 @@ class Nodeg3 {
 			System.out.println("move f z " + z.id);
 			z = z.parent;
 		    }
+		    System.exit(0);
+		    // if ( 1000 <  Grid4.moveCnt ) System.exit(0);
 		    // */
-		    // return; // activate for more than 1 solution
-		    // Grid3.depth--;
-		    // return;
+		    Grid4.depth--;
+		    return;
 	    }
 	} else { // move backward
 	    for (int k = 0; k < numMoves; k++) {
-		GN3 gnk = moves[k];
+		GN4 gnk = moves[k];
 		if (trace)  System.out.println("move b k gnk " + k + " " + gnk.id);
 		if (trace) System.out.println("gnk.id " + gnk.id);
 		if (trace) System.out.println("gnk.direction " + gnk.direction);
 		if (trace) System.out.println("gnk.pos " + gnk.pos);
-		String direction = Grid3.locations.get(gnk);
+		String direction = Grid4.locations.get(gnk);
 		if ( null == direction ) { // not visited
-		    // System.out.println("move b GO DEEPER " + gnk.id);
-		    Grid3.locations.put(gnk, "-");
-		    Grid3.bCnt++;
-		    gnk.pos = Grid3.bCnt;
+		    // System.out.println("move f GO DEEPER " + gnk.id);
+		    Grid4.locations.put(gnk, "-");
+		    Grid4.bCnt++;
+		    gnk.pos = Grid4.bCnt;
 		    // gnk.bPathLng = gn.bPathLng+1;
 		    gnk.direction = -1; 
 		    gnk.parent = gn;
 		    gnk.visited = "-"; 
-		    // Grid3.bPathLng++;
-		    (new Nodeg3(fs, gnk)).move();
-		    // System.out.println("move b back from recursion " + Grid3.depth);
-		    if ( Grid3.done ) { 
-			Grid3.depth--;
+		    // Grid4.bPathLng++;
+		    (new Nodeg4(fs, gnk)).move();
+		    // System.out.println("move b back from recursion " + Grid4.depth);
+		    if ( Grid4.done ) { 
+			Grid4.depth--;
 			return;
 		    }
-		    // Grid3.locations.remove(gnk);
-		    /*  do (NOT) restore
+
+		    // Grid4.locations.remove(gnk);
+		    /* // do (NOT) restore
 		    gnk.pos = 0;
 		    gnk.parent = null;
 		    gnk.direction = 0;
-		    // gnk.fPathLng = gn.fPathLng-1;
-		    Grid3.fCnt--;
+		    // gnk.bPathLng = gn.bPathLng-1;
+		    Grid4.bCnt--;
 		    // */
-		    // Grid3.fPathLng--;
+		    // Grid4.fPathLng--;
 		    continue;
 		}
 		if ( direction.equals("-") ) continue; // visited earlier
+
 		// a solution
-		/*
-		    System.out.println();
-		    System.out.println("Grid3.moveCnt " + Grid3.moveCnt);
-		    System.out.println("b id " + gn.id + " pos " + gn.pos);
-		    System.out.println("b id " + gnk.id + " pos " + gnk.pos);
-		    Grid3.show(); 
-		    Grid3.showd(); 
-		    // */
-		    Grid3.solutionCnt++;
-		    { Grid3.done = true; break; } // terminate with 1 solution
 		    /*
-		    System.out.println("----------- moveCnt " + Grid3.moveCnt);
-		    System.out.println("move b FOUND SOLUTION # " + Grid3.solutionCnt);
+		    System.out.println();
+		    System.out.println("************** SOLUTION");
+		    System.out.println("Grid4.moveCnt " + Grid4.moveCnt);
+		    System.out.println("b id " + gnk.id + " pos " + gnk.pos);
+		    System.out.println("Grid4.fCnt + Grid4.bCnt " + 
+				       (Grid4.fCnt + Grid4.bCnt));
+		    Grid4.show(); 
+		    Grid4.showd(); 
+		    Grid4.showv(); 
+		    // System.exit(0);
+		    // */
+		    Grid4.solutionCnt++;
+		    Grid4.done = true; // terminate when a solution is found
+		    /*
+		    System.out.println("------------------------" );
+		    System.out.println("move b FOUND SOLUTION # " + Grid4.solutionCnt);
+		    // /*
 		    // print the paths
 		    System.out.println("move other side: " + gnk.id);
-		    GN3 z = gnk.parent; 
+		    GN4 z = gnk.parent; 
 		    while (true) {
 			if ( null == z ) break;
-			System.out.println("move b z  " + z.id);
+			System.out.println("move f z " + z.id);
 			z = z.parent;
 		    }
 		    z = gn; 
-		    System.out.println("move this side: " + z.id);
 		    while (true) {
 			if ( null == z ) break;
 			System.out.println("move b z " + z.id);
 			z = z.parent;
 		    }
+		    System.exit(0);
 		    // */
-		    // return; // activate for more than 1 solution
-		    // Grid3.depth--;
-		    // return;
+		    Grid4.depth--;
+		    return;
 	    }
-
 	}
-	// System.out.println("move BACKTRACK gn depth " + Grid3.depth + 
+	// System.out.println("move BACKTRACK gn depth " + Grid4.depth + 
 	//			   " gn.id " + gn.id + " gn.pos " + gn.pos);
-	Grid3.depth--;
+	Grid4.depth--;
 
 	// return;
     } // end move
-} // end Nodeg3
+} // end Nodeg4
 
-class GN3 {
+
+class GN4 {
     protected int x = 0;
     protected int y = 0;
     protected String id = "";
     protected int pos = 0;
-    protected GN3 north = null; 
-    protected GN3 east = null; 
-    protected GN3 south = null; 
-    protected GN3 west = null;
-    public void setNorth(GN3 n) { north = n; }
-    public void setEast(GN3 n) { east = n; }
-    public void setSouth(GN3 n) { south = n; }
-    public void setWest(GN3 n) { west = n; }
-    protected GN3 parent = null;
-    public void setParent(GN3 n) { parent = n; }
+    protected GN4 north = null; 
+    protected GN4 east = null; 
+    protected GN4 south = null; 
+    protected GN4 west = null;
+    public void setNorth(GN4 n) { north = n; }
+    public void setEast(GN4 n) { east = n; }
+    public void setSouth(GN4 n) { south = n; }
+    public void setWest(GN4 n) { west = n; }
+    protected GN4 parent = null;
+    public void setParent(GN4 n) { parent = n; }
     protected int direction = 0; // forward = 1; backward = -1
     protected int pathLength = -1;
     public void setPathLength(int x) { pathLength = x; }
-    protected GN3 [] moves = new GN3[4];
-    public GN3 [] getMoves() { return moves; }
+    protected GN4 [] moves = new GN4[4];
+    public GN4 [] getMoves() { return moves; }
     protected int numMoves = -1;
     public int getNumMoves() { return numMoves; }
     protected int nextMove = 0;
@@ -509,4 +547,4 @@ class GN3 {
     protected int bPathLng = 0;
     protected String visited = " ";
 
-} // end GN3
+} // end GN4

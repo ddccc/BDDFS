@@ -1,6 +1,18 @@
 // File: c:/ddc/Java/Knight/Grid2.java
-// Date: Fri Apr 22 19:12:42 2022
+// Date: Fri Apr 22 19:12:42 2022, Sat Nov 12 20:56:31 2022
 // (C) OntoOO/ Dennis de Champeaux
+
+/*
+  This code is parametrized regarding::
+     The sizes of the grid
+     Search direction
+     Trace output generated
+     Successor operations ordering scrambled or not
+     Hampering or easing the successor operations/nodes
+        (hampering is adding moves in the wrong direction)
+     Restore or not the search space after a recursive call
+ */
+
 import java.io.*;
 import java.util.*;
 /*
@@ -14,10 +26,44 @@ public class Grid2 {
     // static Date date = new Date();
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
+    // static final int lx = 5; 
     // static final int lx = 6; 
+    // static final int lx = 10; 
+    // static final int lx = 15; 
+    // static final int lx = 20; 
+    // static final int lx = 30; 
+    // static final int lx = 40; // -
+    // static final int lx = 50; // +
+    // static final int lx = 60; // +
+    // static final int lx = 70; // -
+    // static final int lx = 80; // +
+    // static final int lx = 90; 
+    static final int lx = 100; 
+    // static final int lx = 200; 
+
     // static final int ly = 10; 
-    static final int lx = 500; 
-    static final int ly = 2500; 
+    // static final int ly = 12; 
+    // static final int ly = 20; // +
+    // static final int ly = 25; // +  - 6x25
+    // static final int ly = 30; // +
+    // static final int ly = 35; // - 10x35 - 6x35
+    // static final int ly = 40; // +
+    // static final int ly = 45; 
+    // static final int ly = 50; 
+    // static final int ly = 55; 
+    // static final int ly = 60; 
+    // static final int ly = 65; 
+    // static final int ly = 70; // -
+    // static final int ly = 75; 
+    // static final int ly = 80; 
+    // static final int ly = 85; 
+    // static final int ly = 90; 
+    // static final int ly = 95; 
+    // static final int ly = 100; 
+    // static final int ly = 500; 
+    // static final int ly = 1800; 
+    static final int ly = 2000;
+ 
     static GN2 [][] grid = new GN2[lx][ly];
     static int moveCnt = 0; 
     static int solutionCnt = 0; 
@@ -26,6 +72,15 @@ public class Grid2 {
     static int fPathLng = 0;
     static int bPathLng = 0;
     static int depth = 0;
+
+    // select one
+    static boolean bidirection = true;
+    // static boolean bidirection = false;
+
+    static Hashtable<GN2,String> locations = new Hashtable<GN2,String>();
+
+    static boolean flip = true;
+    static boolean done = false;
 
     public static void main(String[] args) {
 	for ( int i = 0; i < lx; i++ )
@@ -68,11 +123,14 @@ public class Grid2 {
 		gnij.id = i + "-" + j;
 		findMoves(gnij, 0);
 	    }
-	GN2 startState = grid[0][0]; startState.fPathLng = 0; 
-	startState.direction = 1;
-	GN2 goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
-	goalState.direction = -1;
-	showg(startState); showg(goalState); 
+	GN2 startState = grid[0][0]; startState.fPathLng = 0; startState.pos = 1;
+	startState.direction = 1;  startState.visited = "+";
+	locations.put(startState, "+");
+	GN2 goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0; goalState.pos = 1;
+	goalState.direction = -1; goalState.visited = "-";
+	locations.put(goalState, "-");
+	// showg(startState); showg(goalState);
+	System.out.println("lx " + lx + " ly " + ly + " bidirection " + bidirection);
 	// System.exit(0);
 	Nodeg2 initNode = new Nodeg2(startState, goalState);
 	long startTime = System.currentTimeMillis();
@@ -81,14 +139,20 @@ public class Grid2 {
 	System.out.println("timing " + (endTime-startTime));
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
-	// showd();
+	/*
+	System.out.println("depth " + depth);
+	showd();
+	show();
+	showv();
+	*/
 
     } // end main
 
     static public void show1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
 	int n = grid[i][j].pos;
-	System.out.print( (n < 10 ? " " + n : n) + " ");
+	if ( 0 == n ) System.out.print("   "); else
+	    System.out.print( (n < 10 ? "  " + n : " " + n));
     } //
     static public void show() {
 	for ( int j = 0; j < lx; j++ ) {
@@ -110,6 +174,19 @@ public class Grid2 {
 	    System.out.println();
 	}
     } // end showd
+    static public void showv1(int i, int j) {
+	String s = grid[i][j].visited;
+	if ( s.equals(" ") ) System.out.print("   ");
+	else if ( s.equals("+") ) System.out.print("  +"); 
+	else if ( s.equals("-") ) System.out.print("  -"); 
+	else System.out.print("   "); 
+    } // showv1
+    static public void showv() {
+	for ( int j = 0; j < lx; j++ ) {
+	    for ( int i = 0; i < ly; i++ ) showv1(j, i);
+	    System.out.println();
+	}
+    } // end showv
     static public void showg(GN2 gn) {
 	System.out.println(gn.id);
 	System.out.println("direction " + gn.direction);
@@ -122,7 +199,8 @@ public class Grid2 {
 	    System.out.print(gnk.id + " ");
 	}
 	System.out.println();
-    }
+    } // end showg
+
     static void findMoves(GN2 gn, int dr) {
 	// set numMovesand puts in moves candidate moves
 	gn.numMoves = 0;
@@ -134,7 +212,7 @@ public class Grid2 {
 	if ( null != gnn && dr != 1 ) { gn.moves[gn.numMoves] = gnn; gn.numMoves++; }
 	gnn = gn.west;
 	if ( null != gnn ) { gn.moves[gn.numMoves] = gnn; gn.numMoves++; }
-	// scramble(gn.numMoves, gn.moves); // optional
+	scramble(gn.numMoves, gn.moves); // optional
     } // end findMoves
     // /*
     static void scramble(int numMoves, GN2 [] moves) { 
@@ -148,7 +226,7 @@ public class Grid2 {
 	}
     } // end scramble()
     // */
-} // end Grid
+} // end Grid2
 
 class Nodeg2 { 
     private GN2 fs, bs, gn;
@@ -156,40 +234,82 @@ class Nodeg2 {
     protected int numMoves = 0;
     protected GN2 [] moves = new GN2[4];
     Nodeg2(GN2 ssx, GN2 bsx) {
+	if ( Grid2.done) return;
 	Grid2.moveCnt++;
 	fs = ssx; bs = bsx;
-	// Choose one of the three
-        // moveForward = true; // unidirectional search
-	// moveForward = false; // unidirectional search
-        moveForward = (Grid2.fPathLng <= Grid2.bPathLng); // bidirectional search
-
+        	// Choose one of the three
+                // moveForward = true; // unidirectional search
+	        // moveForward = false; // unidirectional search
+                       // bidirectional search:
+                // moveForward = (Grid2.fPathLng <= Grid2.bPathLng); 
+	// /*
+	if ( Grid2.bidirection ) // alternate bi or uni direction
+		Grid2.flip = !Grid2.flip;
+	if ( Grid2.flip ) moveForward = true; 
+	             else moveForward = false;
+	// */
 	// findMoves sets numMoves and puts in moves candidate moves
+	// forward and backward not hampered
 	if ( moveForward ) Grid2.findMoves(fs, 1); else Grid2.findMoves(bs, -1);
+	// forward hampered
+	// if ( moveForward ) Grid2.findMoves(fs, 2); else Grid2.findMoves(bs, -1);
+	// both hampered
+	// if ( moveForward ) Grid2.findMoves(fs, 2); else Grid2.findMoves(bs, -2);
     }
     public void move() {
-	Grid.depth++;
+	Grid2.depth++;
 	gn = ( moveForward ? fs : bs );
 	numMoves = gn.getNumMoves();
 	GN2 [] moves = gn.getMoves();
 	if ( moveForward ) {
 	    for (int k = 0; k < numMoves; k++) {
 		GN2 gnk = moves[k];
-		if ( -1 == gnk.direction ) { // a solution
+		String direction = Grid2.locations.get(gnk);
+		if ( null == direction ) { // not visited
+		    // System.out.println("move f GO DEEPER " + gnk.id);
+		    Grid2.locations.put(gnk, "+");
+		    Grid2.fCnt++;
+		    gnk.pos = Grid2.fCnt;
+		    // gnk.fPathLng = gn.fPathLng+1;
+		    gnk.direction = 1; 
+		    gnk.parent = gn;
+		    gnk.visited = "+"; 
+		    // Grid2.fPathLng++;
+		    (new Nodeg2(gnk, bs)).move();
+		    // System.out.println("move f back from recursion " + Grid4.depth);
+		    if ( Grid2.done ) { 
+			Grid2.depth--;
+			return;
+		    }
+		    // Grid2.locations.remove(gnk);
+		    /*  do (NOT) restore
+		    gnk.pos = 0;
+		    gnk.parent = null;
+		    gnk.direction = 0;
+		    // gnk.fPathLng = gn.fPathLng-1;
+		    Grid2.fCnt--;
+		    // */
+		    // Grid2.fPathLng--;
+		    continue;
+		}
+		if ( direction.equals("+") ) continue; // visited earlier
+		// a solution
 		    /*
 		    System.out.println();
 		    System.out.println("Grid2.moveCnt " + Grid2.moveCnt);
+		    System.out.println("f id " + gn.id + " pos " + gn.pos);
 		    System.out.println("f id " + gnk.id + " pos " + gnk.pos);
 		    Grid2.show(); 
 		    Grid2.showd(); 
-		    */
-		    // if ( 38 < Grid2.moveCnt ) System.exit(0);
+		    // */
 		    Grid2.solutionCnt++;
+		    // { Grid2.done = true; break; } // terminate with 1 solution
 		    /*
 		    System.out.println("----------- moveCnt " + Grid2.moveCnt);
 		    System.out.println("move f FOUND SOLUTION # " + Grid2.solutionCnt);
 		    // print the paths
 		    System.out.println("move other side: " + gnk.id);
-		    GN z = gnk.parent; 
+		    GN2 z = gnk.parent; 
 		    while (true) {
 			if ( null == z ) break;
 			System.out.println("move b z  " + z.id);
@@ -202,56 +322,62 @@ class Nodeg2 {
 			System.out.println("move f z " + z.id);
 			z = z.parent;
 		    }
-		    // if ( 1000 <  Grid2.moveCnt ) System.exit(0);
 		    // */
+		    // return; // activate for more than 1 solution
+		    Grid2.depth--;
 		    return;
 		}
-		if ( 0 == gnk.direction ) { // can go there
-		    // System.out.println("move f GO DEEPER " + gnk.id);
-		    Grid2.fCnt++;
-		    gnk.pos = Grid2.fCnt;
-		    gnk.fPathLng = gn.fPathLng+1;
-		    gnk.direction = 1;
-		    gnk.parent = gn;
-		    Grid2.fPathLng++;
-		    (new Nodeg2(gnk, bs)).move();
-		    /* // do NOT restore
-		    gnk.pos = 0;
-		    gnk.parent = null;
-		    gnk.direction = 0;
-		    gnk.fPathLng = gn.fPathLng-1;
-		    Grid2.fCnt--;
-		    // */
-		    Grid2.fPathLng--;
-		    continue;
-		} else { 
-		    // visited earlier
-		    // System.out.println("move f visited earlier");
-		    continue;
-		    // System.exit(0);
-		}
-	    } 
 	} else { // move backward
 	    for (int k = 0; k < numMoves; k++) {
 		GN2 gnk = moves[k];
 		// System.out.println("move b k gnk " + k + " " + gnk.id);
-		if ( 1 == gnk.direction ) { // a solution
+		String direction = Grid2.locations.get(gnk);
+		if ( null == direction ) { // not visited
+		    // System.out.println("move f GO DEEPER " + gnk.id);
+		    Grid2.locations.put(gnk, "-");
+		    Grid2.bCnt++;
+		    gnk.pos = Grid2.bCnt;
+		    // gnk.bPathLng = gn.bPathLng+1;
+		    gnk.direction = -1; 
+		    gnk.parent = gn;
+		    gnk.visited = "-"; 
+		    // Grid4.bPathLng++;
+		    (new Nodeg2(fs, gnk)).move();
+		    // System.out.println("move b back from recursion " + Grid4.depth);
+		    if ( Grid2.done ) { 
+			Grid2.depth--;
+			return;
+		    }
+		    // Grid2.locations.remove(gnk);
+		    /* do (NOT) restore
+		    gnk.pos = 0;
+		    gnk.parent = null;
+		    gnk.direction = 0;
+		    // gnk.bPathLng = gn.bPathLng-1;
+		    Grid4.bCnt--;
+		    // */
+		    // Grid4.fPathLng--;
+		    continue;
+		}
+		if ( direction.equals("-") ) continue; // visited earlier
+		// a solution
 		    /*
 		    System.out.println();
 		    System.out.println("Grid2.moveCnt " + Grid2.moveCnt);
+		    System.out.println("b id " + gn.id + " pos " + gn.pos);
 		    System.out.println("b id " + gnk.id + " pos " + gnk.pos);
 		    Grid2.show(); 
 		    Grid2.showd(); 
-		    */
-		    // if ( 38 < Grid2.moveCnt ) System.exit(0);
+		    // */
 		    Grid2.solutionCnt++;
+		    // { Grid2.done = true; break; } // terminate with 1 solution
 		    /*
 		    System.out.println("------------------------" );
 		    System.out.println("move b FOUND SOLUTION # " + Grid2.solutionCnt);
 		    // /*
 		    // print the paths
 		    System.out.println("move other side: " + gnk.id);
-		    GN z = gnk.parent; 
+		    GN2 z = gnk.parent; 
 		    while (true) {
 			if ( null == z ) break;
 			System.out.println("move f z " + z.id);
@@ -263,41 +389,17 @@ class Nodeg2 {
 			System.out.println("move b z " + z.id);
 			z = z.parent;
 		    }
-		    // System.exit(0);
 		    // */
+		    // return; // restore for more than one solution
+		    Grid2.depth--;
 		    return;
 		}
-		if ( 0 == gnk.direction ) { // can go there
-		    // System.out.println("move b GO DEEPER " + gnk.id);
-		    Grid2.bCnt++;
-		    gnk.pos = Grid2.bCnt;
-		    gnk.bPathLng = gn.bPathLng+1;
-		    gnk.direction = -1;
-		    gnk.parent = gn;
-		    Grid2.bPathLng++;
-		    (new Nodeg2(fs, gnk)).move();
-		    /* // do NOT restore
-		    gnk.pos = 0;
-		    gnk.parent = null;
-		    gnk.direction = 0;
-		    gnk.bPathLng = gnk.bPathLng-1;
-		    Grid2.bCnt--;
-		    // */
-		    Grid2.bPathLng--;
-		    continue;
-		} else { 
-		    // visited earlier
-		    // System.out.println("move b visited earlier");
-		    continue;
-		    // System.exit(0);
-		}
-	    } 
 	}
 	// System.out.println("move BACKTRACK gn depth " + gn.id + " " + Grid2.depth);
 	Grid2.depth--;
 	// return;
     } // end move
-} // end Nodeg
+} // end Nodeg2
 
 class GN2 {
     protected int x = 0;
@@ -325,5 +427,5 @@ class GN2 {
     public int getNextMove() { int n = nextMove; nextMove++; return n; }
     protected int fPathLng = 0;
     protected int bPathLng = 0;
-
+    protected String visited = " ";
 } // end GN2

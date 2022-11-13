@@ -1,8 +1,20 @@
 // File: c:/ddc/Java/Knight/GridT.java
-// Date: Fri Apr 22 19:12:42 2022
+// Date: Fri Apr 22 19:12:42 2022, Sun Nov 13 09:23:01 2022
 // (C) OntoOO/ Dennis de Champeaux
 import java.io.*;
 import java.util.*;
+
+/*
+  This code is parametrized regarding::
+     The sizes of the grid
+     Search direction
+     Trace output generated
+     Successor operations ordering scrambled or not
+     Hampering or easing the successor operations/nodes
+        (hampering is adding moves in the wrong direction)
+     Restore or not the search space after a recursive call
+ */
+
 /*
 Y
          North
@@ -16,8 +28,19 @@ public class GridT {
     static Random random = new Random(777); // repeatable results
     // static final int lx = 6; 
     // static final int ly = 10; 
-    static final int lx = 100;
+    // static final int ly = 12;
+
+    // static final int lx = 5;
+    // static final int lx = 10;
+    // static final int lx = 15;
+    // static final int lx = 20;
+    // static final int lx = 40;
+    // static final int lx = 60;
+    // static final int lx = 80;
+    // static final int lx = 100;
+    static final int lx = 600;
     static final int ly = 2000; 
+
     static GNT [][] grid = new GNT[lx][ly];
     static int moveCnt = 0; 
     static int solutionCnt = 0; 
@@ -26,6 +49,10 @@ public class GridT {
     static int fPathLng = 0;
     static int bPathLng = 0;
     static int depth = 0;
+    static boolean done = false;
+
+    static Hashtable<GNT,String> locations = new Hashtable<GNT,String>();
+    static boolean moveForward = false;
 
     public static void main(String[] args) {
 	for ( int i = 0; i < lx; i++ )
@@ -82,11 +109,11 @@ public class GridT {
 		findMoves(gnij, 0);
 	    }
 	GNT startState = grid[0][0]; startState.fPathLng = 0; 
-	startState.direction = 1;
-	startState.pos = 1;
+	startState.direction = 1; startState.pos = 1;
+	startState.visited = "+"; locations.put(startState, "+");
 	GNT goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
-	goalState.direction = -1;
-	goalState.pos = 1;
+	goalState.direction = -1; goalState.pos = 1;
+	goalState.visited = "-"; locations.put(goalState, "-"); 
 	showg(startState); showg(goalState); 
 	// System.exit(0);
 	NodegT initNode = new NodegT(startState, goalState);
@@ -97,13 +124,15 @@ public class GridT {
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
 	// showd();
+	// show();
 
     } // end main
 
     static public void show1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
 	int n = grid[i][j].pos;
-	System.out.print( (n < 10 ? " " + n : n) + " ");
+	if ( 0 == n ) System.out.print("   "); else
+	    System.out.print( (n < 10 ? "  " + n : " " + n));
     } //
     static public void show() {
 	for ( int j = 0; j < lx; j++ ) {
@@ -163,7 +192,7 @@ public class GridT {
 	}
     } // end scramble()
     // */
-} // end Grid
+} // end GridT
 
 class NodegT { 
     private GNT fs, bs, gn;
@@ -176,18 +205,26 @@ class NodegT {
 	// System.out.println("NodegT ssx.pos " + ssx.pos);
 	// System.out.println("NodegT bsx.pos " + bsx.pos);
 	fs = ssx; bs = bsx;
+	// if ( 3 < GridT.moveCnt ) System.exit(0);
 	// Choose one of the three
 	// moveForward = true; // unidirectional search
 	// moveForward = false; // unidirectional search
-        moveForward = (GridT.fPathLng <= GridT.bPathLng); // bidirectional search
+        // moveForward = (GridT.fPathLng <= GridT.bPathLng); // bidirectional search
+	// or:
+	GridT.moveForward = !GridT.moveForward;
+        moveForward = GridT.moveForward; // bidirectional search
 
 	// findMoves sets numMoves and puts in moves candidate moves
+	// both directions eased
 	if ( moveForward ) GridT.findMoves(fs, 1); else GridT.findMoves(bs, -1);
+	// both directions hamperd
+	// if ( moveForward ) GridT.findMoves(fs, 2); else GridT.findMoves(bs, -2);
     }
     public void move() {
+	if ( GridT.done) return;
 	// System.out.println("move moveForward " + moveForward);
 	// GridT.show();  
-	Grid.depth++;
+	GridT.depth++;
 	gn = ( moveForward ? fs : bs );
 	// System.out.println("move gn.pos " + gn.pos);
 	numMoves = gn.getNumMoves();
@@ -197,17 +234,48 @@ class NodegT {
 	if ( moveForward ) {
 	    for (int k = 0; k < numMoves; k++) {
 		GNT gnk = moves[k];
-		if ( -1 == gnk.direction ) { // a solution
-		    /*
+		String direction = GridT.locations.get(gnk);
+		if ( null == direction ) { // not visited
+		    // System.out.println("move f GO DEEPER " + gnk.id);
+		    GridT.locations.put(gnk, "+");
+		    GridT.fCnt++;
+		    gnk.pos = GridT.fCnt;
+		    // gnk.fPathLng = gn.fPathLng+1;
+		    gnk.direction = 1; 
+		    gnk.parent = gn;
+		    gnk.visited = "+"; 
+		    // GridT.fPathLng++;
+		    (new NodegT(gnk, bs)).move();
+		    // System.out.println("move f back from recursion " + GridT.depth);
+		    if ( GridT.done ) { 
+			GridT.depth--;
+			return;
+		    }
+		    // GridT.locations.remove(gnk);
+		    /*  do (NOT) restore
+		    gnk.pos = 0;
+		    gnk.parent = null;
+		    gnk.direction = 0;
+		    // gnk.fPathLng = gn.fPathLng-1;
+		    GridT.fCnt--;
+		    // */
+		    // GridT.fPathLng--;
+		    continue;
+		}
+		if ( direction.equals("+") ) continue; // visited earlier
+		// a solution
+	       /*
 		    System.out.println();
-		    System.out.println("GridT.moveCnt " + GridT.moveCnt);
+		    System.out.println("Solution GridT.moveCnt " + GridT.moveCnt);
+		    System.out.println("f id " + gn.id + " pos " + gn.pos);
 		    System.out.println("f id " + gnk.id + " pos " + gnk.pos);
 		    GridT.show(); 
 		    GridT.showd(); 
-		    System.exit(0);
+		    // System.exit(0);
 		    // */
-		    // if ( 38 < GridT.moveCnt ) System.exit(0);
 		    GridT.solutionCnt++;
+		    // GridT.done = true;
+		    // GridT.showd();
 		    /*
 		    System.out.println("----------- moveCnt " + GridT.moveCnt);
 		    System.out.println("move f FOUND SOLUTION # " + GridT.solutionCnt);
@@ -229,48 +297,53 @@ class NodegT {
 		    // if ( 1000 <  GridT.moveCnt ) System.exit(0);
 		    // */
 		    return;
-		}
-		if ( 0 == gnk.direction ) { // can go there
-		    // System.out.println("move f GO DEEPER " + gnk.id);
-		    GridT.fCnt++;
-		    gnk.pos = GridT.fCnt;
-		    gnk.fPathLng = gn.fPathLng+1;
-		    gnk.direction = 1;
-		    gnk.parent = gn;
-		    GridT.fPathLng++;
-		    // GridT.show();
-		    (new NodegT(gnk, bs)).move();
-		    /* // do NOT restore
-		    gnk.pos = 0;
-		    gnk.parent = null;
-		    gnk.direction = 0;
-		    gnk.fPathLng = gn.fPathLng-1;
-		    GridT.fCnt--;
-		    // */
-		    GridT.fPathLng--;
-		    continue;
-		} else { 
-		    // visited earlier
-		    // System.out.println("move f visited earlier");
-		    continue;
-		    // System.exit(0);
-		}
-	    } 
+	    }
 	} else { // move backward
 	    for (int k = 0; k < numMoves; k++) {
 		GNT gnk = moves[k];
 		// System.out.println("move b k gnk " + k + " " + gnk.id);
-		if ( 1 == gnk.direction ) { // a solution
+		String direction = GridT.locations.get(gnk);
+		if ( null == direction ) { // not visited
+		    // System.out.println("move b GO DEEPER " + gnk.id);
+		    GridT.locations.put(gnk, "-");
+		    GridT.bCnt++;
+		    gnk.pos = GridT.bCnt;
+		    // gnk.bPathLng = gn.bPathLng+1;
+		    gnk.direction = -1; 
+		    gnk.parent = gn;
+		    gnk.visited = "-"; 
+		    // GridT.bPathLng++;
+		    (new NodegT(fs, gnk)).move();
+		    // System.out.println("move f back from recursion " + GridT.depth);
+		    if ( GridT.done ) { 
+			GridT.depth--;
+			return;
+		    }
+		    // GridT.locations.remove(gnk);
+		    /*  do (NOT) restore
+		    gnk.pos = 0;
+		    gnk.parent = null;
+		    gnk.direction = 0;
+		    // gnk.bPathLng = gn.bPathLng-1;
+		    GridT.bCnt--;
+		    // */
+		    // GridT.bPathLng--;
+		    continue;
+		}
+		if ( direction.equals("-") ) continue; // visited earlier
+		// a solution
 		    /*
 		    System.out.println();
-		    System.out.println("GridT.moveCnt " + GridT.moveCnt);
+		    System.out.println("Solution GridT.moveCnt " + GridT.moveCnt);
+		    System.out.println("b id " + gn.id + " pos " + gn.pos);
 		    System.out.println("b id " + gnk.id + " pos " + gnk.pos);
 		    GridT.show(); 
 		    GridT.showd(); 
-		    System.exit(0);
+		    // System.exit(0);
 		    // */
-		    // if ( 38 < GridT.moveCnt ) System.exit(0);
 		    GridT.solutionCnt++;
+		    // GridT.done = true;
+		    // GridT.showd(); 
 		    /*
 		    System.out.println("------------------------" );
 		    System.out.println("move b FOUND SOLUTION # " + GridT.solutionCnt);
@@ -293,31 +366,7 @@ class NodegT {
 		    // */
 		    return;
 		}
-		if ( 0 == gnk.direction ) { // can go there
-		    // System.out.println("move b GO DEEPER " + gnk.id);
-		    GridT.bCnt++;
-		    gnk.pos = GridT.bCnt;
-		    gnk.bPathLng = gn.bPathLng+1;
-		    gnk.direction = -1;
-		    gnk.parent = gn;
-		    GridT.bPathLng++;
-		    (new NodegT(fs, gnk)).move();
-		    /* // do NOT restore
-		    gnk.pos = 0;
-		    gnk.parent = null;
-		    gnk.direction = 0;
-		    gnk.bPathLng = gnk.bPathLng-1;
-		    GridT.bCnt--;
-		    // */
-		    GridT.bPathLng--;
-		    continue;
-		} else { 
-		    // visited earlier
-		    // System.out.println("move b visited earlier");
-		    continue;
-		    // System.exit(0);
-		}
-	    } 
+
 	}
 	// System.out.println("move BACKTRACK gn depth " + gn.id + " " + GridT.depth);
 	GridT.depth--;
@@ -351,5 +400,5 @@ class GNT {
     public int getNextMove() { int n = nextMove; nextMove++; return n; }
     protected int fPathLng = 0;
     protected int bPathLng = 0;
-
+    protected String visited = " ";
 } // end GNT
