@@ -61,6 +61,9 @@ public class Knight3 {
 
     static boolean moveForward = false;
 
+    static boolean done = false;
+
+    static long start = 0;
 
     public static void main(String[] args) {
 	// Set up the board:
@@ -121,6 +124,7 @@ public class Knight3 {
 	// Initialize the first node ...
 	Node3 initNode = new Node3(startState, goalState);
 	long startTime = System.currentTimeMillis();
+	start = startTime;
 	// ... get the ball rolling
 	initNode.move();
 	long endTime = System.currentTimeMillis();
@@ -147,8 +151,6 @@ public class Knight3 {
 	    } else num[tpos] = true;
 	}
     } // end check
-
-
 } // end of Knight3
 
 class Node3 {
@@ -157,26 +159,7 @@ class Node3 {
     protected int [] moves = new int[Knight3.numMoves];
     protected int zeroCnt = 0;
     Node3(int fidy, int bidy) {
-	/* // recognize unreachable tiles and return (6x6 specific)
-           // uncomment to activate this enhancement, which provides
-           // a speed up of about 0.21
-	if ( 21 <= Knight3.tilesCnt && Knight3.tilesCnt <= 33 ) {
-	    for ( int i = 0; i < Knight3.side; i++ ) {
-		int row = Knight3.twoside2 + i * Knight3.side2;
-		boolean foundIslnd = false;
-		for ( int j = 0; j < Knight3.side ; j++ ) {
-		    int column = Knight3.edge + j;
-		    int sum = row + column;
-		    int val = Knight3.board[sum].getPos();
-		    if ( 0 != val ) continue;
-		    int zeroTile = findZeroTile(sum);
-		    if ( 0 == zeroTile ) {
-			// System.out.println("island sum " + sum);
-			return; // give up
-		    }
-		}	
-	    }
-	*/
+	if ( Knight3.done ) return;
 	/*
 	    System.out.println("fidy " + fidy + " bidy " + bidy); 
 	    System.out.println("fidy " + Knight3.board[fidy].getPos() + 
@@ -184,16 +167,15 @@ class Node3 {
 	    Knight3.show();
 	    System.exit(0);
 	*/
-
 	fidx = fidy; bidx = bidy;
 
 	// Select one of the three options: 
-	// moveForward = true; // unidirectional search
+	moveForward = true; // unidirectional search
 	// moveForward = false; // unidirectional search
 
 	// Knight3.moveForward = ! Knight3.moveForward;
 	// moveForward = Knight3.moveForward;
-	moveForward  = (Knight3.fCnt < Knight3.bCnt); // bidirectional search
+	// moveForward  = (Knight3.fCnt < Knight3.bCnt); // bidirectional search
 
 	// This sets zeroCnt and puts in moves candidate moves:
 	if ( moveForward ) findMoves(fidx); else findMoves(bidx);
@@ -218,6 +200,13 @@ class Node3 {
 		}
 	    if ( found ) {
 		Knight3.solutionCnt++;
+		if ( 0 == Knight3.solutionCnt%100) {
+		    long diff = System.currentTimeMillis() - Knight3.start;
+		    long delta = diff/ Knight3.solutionCnt;
+		    System.out.println("solutionCnt " + Knight3.solutionCnt + 
+				       " delta " + delta);
+		}
+		// if ( 100 < Knight3.solutionCnt ) Knight3.done = true;
 		/* // display the solution
 		   System.out.println("\nmove moveCnt " + Knight3.moveCnt);
 		   System.out.println("move tilesCnt " + Knight3.tilesCnt);
@@ -261,14 +250,23 @@ class Node3 {
 	}
 	// go deeper
     	for ( int k = 0; k < zeroCnt; k++ ) {
+	    if ( Knight3.done ) return;
 	    int nextIdx = moves[k];
 	    // check whether it is safe to move to nextIdx
-	    int numFreeCellsk = numFreeCells(nextIdx); // ????
-	    // int numFreeCellsTarget = numFreeCells(nextIdx);
-	    int numFreeCellsTarget = numFreeCellsk;
-	    if ( 0 == numFreeCellsTarget && 
-		     Knight3.tilesCnt < Knight3.targetTilesSet ) continue;
+	    int numFreeCellsk = numFreeCells(nextIdx);
 	    if ( 0 < numFreeCellsk ) { // go down
+		// check whether a cell becomes unreachable
+		if ( Knight3.tilesCnt <= 33 ) { //6x6
+		// if ( Knight3.tilesCnt <= 60 ) { //8x8
+		    boolean found = false;
+		    for ( int z = 0; z < Knight3.numMoves; z++ ) {
+			int idxz = getNeighbor(nextIdx, z);
+			if ( 0 != Knight3.board[idxz].getPos() ) continue; // no worry
+			int numFreeCellsz = numFreeCells(idxz);
+			if ( numFreeCellsz <= 1 ) { found = true; break; }
+		    }
+		    if ( found ) continue;
+		}
 		Knight3.tilesCnt++;
 		int fidxz, bidxz;
 		if ( moveForward ) {
@@ -309,7 +307,7 @@ class Node3 {
 	// System.out.println("findMoves(idx) " + idx);
 	for ( int k = 0; k < Knight3.numMoves; k++ ) {
 	    int idxk = getNeighbor(idx, k);
-	    // System.out.println("idxk " + idxk + " board[idxk] " + b<oard[idxk]);
+	    // System.out.println("idxk " + idxk + " board[idxk] " + board[idxk]);
 	    if ( 0 == Knight3.board[idxk].getPos() ) { // candidate loc
 		moves[zeroCnt] = idxk;
 		zeroCnt++;
