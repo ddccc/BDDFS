@@ -82,8 +82,8 @@ public class Grid2BF {
     static boolean flip = true;
     static boolean done = false;
 
-    static Queue<GN2BF> fqueue = new LinkedList<>();
-    static Queue<GN2BF> bqueue = new LinkedList<>();
+    static Queue<GN2BF> fqueue = new LinkedList<GN2BF>();
+    static Queue<GN2BF> bqueue = new LinkedList<GN2BF>();
     // offer(.) poll()
     public static void main(String[] args) {
 	for ( int i = 0; i < lx; i++ )
