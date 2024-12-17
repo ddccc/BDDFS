@@ -1,5 +1,5 @@
-// File: c:/ddc/Java/Knight/Gridpt.java
-// Date: Sat Nov 05 13:00:36 2022 Sun Nov 13 09:31:16 2022
+// File: c:/ddc/Java/Knight/Grid2p4.java
+// Date: Sun May 29 16:21:22 2022 Sun Nov 13 09:44:35 2022
 // (C) OntoOO/ Dennis de Champeaux
 import java.io.*;
 import java.util.*;
@@ -21,30 +21,23 @@ Y
          South  
 0-0                  X
  */
-// Two thread parallel version of Grid3
-public class Gridpt { 
+// Two thread parallel version of 
+// This is a two barrier version 
+public class Grid2p4 { 
     // static Date date = new Date();
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
-    // static final int lx = 6; 
-    // static final int ly = 12;
+    // static final int lx = 5; 
+    // static final int ly = 10;
 
-    // static final int lx = 6; 
+    static final int lx = 6; 
+    // static final int ly = 12;
+    static final int ly = 25;
     // static final int ly = 30;
 
-    // static final int lx = 5; 
-    // static final int lx = 10;
     // static final int lx = 15;
     // static final int lx = 20;
-    // static final int lx = 40;
-    // static final int lx = 60;
-    // static final int lx = 80;    
-    // static final int lx = 100;    
-    static final int lx = 600;    
-
-
     // static final int ly = lx;
-
     // static final int lx = 100;   
     // static final int lx = 200;
     // static final int lx = 300;
@@ -55,13 +48,13 @@ public class Gridpt {
     // static final int lx = 800;
     // static final int lx = 900;
     // static final int lx = 1000;
-    static final int ly = 2000;
 
-    // static final int lx = 400;   
-    // static final int ly = 400;
+    // static final int ly = 1600;
+    // static final int ly = 1800;
+    // static final int ly = 2000;
 
 
-    static GNPt [][] grid = new GNPt[lx][ly];
+    static GN2p4 [][] grid = new GN2p4[lx][ly];
     static int moveCnt = 0; 
     static Object os = new Object();
     static int solutionCnt = 0; 
@@ -71,47 +64,41 @@ public class Gridpt {
     static int bPathLng = 0;
     static int depthf = 0;
     static int depthb = 0;
-
-    static int midpointx = lx/2;
-    static int midpointy = ly/2;
+    /*
+    static int bx = ly/3;
+    static int barrier1 = bx - 1;
+    static int barrier2 = ly - bx;
+    */
 
     static boolean done = false; // for terminating when a solution is found
 
-    // static Hashtable<GNPt,String> locations = new Hashtable<GNPt,String>();
+    static Hashtable<GN2p4,String> locations = new Hashtable<GN2p4,String>();
 
     public static void main(String[] args) {
+	System.out.println(" lx " + lx +
+			   " ly " + ly ); //+ " barrier1 " + barrier1 + 
+	                                  //" barrier2 " + barrier2);
 	for ( int i = 0; i < lx; i++ )
-	    for ( int j = 0; j < ly; j++ ) grid[i][j] = new GNPt();
-	// Rectangular grid on a torus
+	    for ( int j = 0; j < ly; j++ ) grid[i][j] = new GN2p4();
 	for ( int i = 0; i < lx; i++ ) {
 	    if ( 0 == i ) {
 		for ( int j = 0; j < ly; j++ ) {
 		    grid[0][j].setEast(grid[1][j]);
 		}
-		for ( int j = 0; j < ly; j++ ) {
-		    grid[0][j].setWest(grid[lx-1][j]);
-		}
 		for ( int j = 0; j < ly-1; j++ ) {
 		    grid[0][j].setNorth(grid[0][j+1]);
 		}
-		grid[0][ly-1].setNorth(grid[0][0]);
 		for ( int j = 1; j < ly; j++ ) {
 		    grid[0][j].setSouth(grid[0][j-1]);
 		}
-		grid[0][0].setSouth(grid[0][ly-1]);
 	    } else { // 0 < i
 		if ( i == lx-1 ) {
-		    for ( int j = 0; j < ly; j++ )
-			grid[i][j].setEast(grid[0][j]);
 		    for ( int j = 0; j < ly; j++ ) 
 			grid[i][j].setWest(grid[i-1][j]);
 		    for ( int j = 0; j < ly-1; j++ ) 
 			grid[i][j].setNorth(grid[i][j+1]);
-		    grid[i][ly-1].setNorth(grid[i][0]);
 		    for ( int j = 1; j < ly; j++ ) 
 			grid[i][j].setSouth(grid[i][j-1]);
-		    grid[i][0].setSouth(grid[i][ly-1]);
-
 		} else { // 0 < i < lx-1
 		    for ( int j = 0; j < ly; j++ ) {
 			grid[i][j].setWest(grid[i-1][j]);
@@ -121,24 +108,22 @@ public class Gridpt {
 			grid[i][j].setNorth(grid[i][j+1]);
 		    for ( int j = 1; j < ly; j++ ) 
 			grid[i][j].setSouth(grid[i][j-1]);
-		    grid[i][ly-1].setNorth(grid[i][0]);
-		    grid[i][0].setSouth(grid[i][ly-1]);
 		}	
 	    }
 	}
 
 	for ( int i = 0; i < lx; i++ ) 
 	    for ( int j = 0; j < ly; j++ ) {
-		GNPt gnij = grid[i][j];
+		GN2p4 gnij = grid[i][j];
 		gnij.x = i; gnij.y = j;
 		gnij.id = i + "-" + j;
 		findMoves(gnij, 0);
 	    }
 
-	GNPt startState = grid[0][0]; startState.fPathLng = 0; 
+	GN2p4 startState = grid[0][0]; startState.fPathLng = 0; 
 	startState.direction = 1; startState.pos = 1; startState.visited = "+";
-	GNPt goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
-	// GNPt goalState = grid[0][ly-1]; goalState.bPathLng = 0;
+	GN2p4 goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
+	// GNP4 goalState = grid[0][ly-1]; goalState.bPathLng = 0;
 	goalState.direction = -1; goalState.pos = 1; goalState.visited = "-";
 	showg(startState); showg(goalState); 
 	System.out.println();
@@ -147,9 +132,10 @@ public class Gridpt {
 	// boolean backwardRunDone = false;
 	// 	Object os = new Object();
 	//    synchronized ( os ) {
-	Nodegpt fNode = new Nodegpt(true, startState); // forward thread
-	Nodegpt bNode = new Nodegpt(false, goalState); // backward thread
+	Nodeg2p4 fNode = new Nodeg2p4(true, startState); // forward thread
+	Nodeg2p4 bNode = new Nodeg2p4(false, goalState); // backward thread
 	// Thread currThread = Thread.currentThread();
+
 	Thread forward = new Thread(new Runnable() {
 		public void run() { 
 		    fNode.move(fNode.gn); 
@@ -158,6 +144,7 @@ public class Gridpt {
 		public void run() { 
 		    bNode.move(bNode.gn); 
 		} } );
+
 	long startTime = System.currentTimeMillis();
 	// backward.start(); // to change the order
 	forward.start();
@@ -166,23 +153,20 @@ public class Gridpt {
 	    forward.join();
 	    backward.join();
 	} catch (InterruptedException e) {}
-	
 	long endTime = System.currentTimeMillis();
 	System.out.println("\ntiming " + (endTime-startTime));
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
-	/*
-	show();	
-	System.out.println();
-	showd();
-	System.out.println();
-	showv();
-	// */
-	// show();
-	// showd();
 
-	System.out.println("Gridpt.fCnt " + Gridpt.fCnt + 
-			   " Gridpt.bCnt " + Gridpt.bCnt);
+
+	show();
+	/*
+	// showd();
+	// showv();
+	System.out.println("Grid2p4.fCnt " + Grid2p4.fCnt + 
+			   " Grid2p4.bCnt " + Grid2p4.bCnt);
+	// */
+
 
     } // end main
 
@@ -198,7 +182,7 @@ public class Gridpt {
 	    System.out.println();
 	}
     } // end show
-
+    /*
     static public void showm() {
 	for ( int j = 0; j < lx; j++ ) {
 	    for ( int i = midpointy-1; i <= midpointy-1; i++ ) 
@@ -206,6 +190,7 @@ public class Gridpt {
 	    System.out.println();
 	}
     } // end showm
+    */
     static public void showd1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
 	int n = grid[i][j].direction;
@@ -237,24 +222,24 @@ public class Gridpt {
 	}
     } // end showv
 
-    static public void showg(GNPt gn) {
+    static public void showg(GN2p4 gn) {
 	System.out.println(gn.id);
 	System.out.println("direction " + gn.direction);
 	int numMoves = gn.getNumMoves();
 	System.out.println("numMoves " + numMoves);
-	GNPt [] moves = gn.getMoves();
+	GN2p4 [] moves = gn.getMoves();
 	for (int k = 0; k < numMoves; k++) {
 	    System.out.print(k + " ");
-	    GNPt gnk = moves[k];
+	    GN2p4 gnk = moves[k];
 	    System.out.print(gnk.id + " ");
 	}
 	System.out.println();
     }
 
-    static void findMoves(GNPt gn, int dr) {
+    static void findMoves(GN2p4 gn, int dr) {
 	// set numMovesand puts in moves candidate moves
 	gn.numMoves = 0;
-	GNPt gnn = gn.north;
+	GN2p4 gnn = gn.north;
 	if ( null != gnn && dr != -1 ) { 
 	    gn.moves[gn.numMoves] = gnn; gn.numMoves++; }
 	gnn = gn.south;
@@ -269,82 +254,93 @@ public class Gridpt {
 	scramble(gn.numMoves, gn.moves); // optional
     } // end findMoves
     // /*
-    static void scramble(int numMoves, GNPt [] moves) { 
+    static void scramble(int numMoves, GN2p4 [] moves) { 
 	// change order of the candidate moves in a GN
 	// System.out.println("scramble numMoves " + numMoves);
 	for (int i = 0; i < numMoves; i++) {
 	    int a = random.nextInt(numMoves);
 	    int b = random.nextInt(numMoves);
 	    // System.out.println("scramble a b " + a + " " + b);
-	    GNPt t = moves[a]; moves[a] = moves[b]; moves[b] = t;
+	    GN2p4 t = moves[a]; moves[a] = moves[b]; moves[b] = t;
 	}
     } // end scramble()
     // */
-} // end Gridpt
+} // end Grid2p4
 
-class Nodegpt { 
-    protected GNPt gn;
+class Nodeg2p4 { 
+    protected GN2p4 gn;
     protected boolean moveForward = false;
     protected int numMoves = 0;
-    protected GNPt [] moves = new GNPt[4];
-    Nodegpt(boolean b, GNPt gnp) {
-	Gridpt.moveCnt++;
+    protected GN2p4 [] moves = new GN2p4[4];
+    Nodeg2p4(boolean b, GN2p4 gnp) {
+	Grid2p4.moveCnt++;
 	gn = gnp;
 	moveForward = b;
+	/*
+	    System.out.println("\n-------------------------------------");
+	    System.out.println("moveCnt " + Grid2p4.moveCnt);
+	    System.out.println("pos " + gn.pos + " fCnt " +  Grid2p4.fCnt);
+	    Grid2p4.show();
+	    if (50 < Grid2p4.moveCnt ) System.exit(0);
+	*/
+
 	// Choose one of the three
         // moveForward = true; // unidirectional search
 	// moveForward = false; // unidirectional search
-        // moveForward = (Gridpt.fPathLng <= Gridpt.bPathLng); // bidirectional search +
-	// moveForward = (Gridpt.fCnt <= Gridpt.bCnt); // bidirectional search
+        // moveForward = (Grid2p4.fPathLng <= Grid2p4.bPathLng); // bidirectional search +
+	// moveForward = (Grid2p4.fCnt <= Grid2p4.bCnt); // bidirectional search
 
 	// findMoves sets numMoves and puts in moves candidate moves
 	// forward & backward eased
-	if ( moveForward ) Gridpt.findMoves(gn, 1); else Gridpt.findMoves(gn, -1);
+	if ( moveForward ) Grid2p4.findMoves(gn, 1); else Grid2p4.findMoves(gn, -1);
 	// forward & backward hampered
-	// if ( moveForward ) Gridpt.findMoves(gn, 2); else Gridpt.findMoves(gn, -2);
+	// normal paths:
+	// if ( moveForward ) Grid2p4.findMoves(gn, 2);  else Grid2p4.findMoves(gn, -2);
+    } // end Nodeg2p4
 
-	// System.out.println("Nodegpt Gridpt.moveCnt " + Gridpt.moveCnt + " " + b);
-    }
-    public void move(GNPt gn) {
-	if ( Gridpt.done ) return; // terminate
+    public void move(GN2p4 gn) {
+	if ( Grid2p4.done ) return; // terminate
 	/*
 	if ( moveForward ) {
-	    if ( Gridpt.midpointy <= gn.y ) return;
+	    if ( Grid2p4.midpointy <= gn.y ) return;
 	} else {
-	    if ( gn.y <= Gridpt.midpointy) return;
+	    if ( gn.y <= Grid2p4.midpointy) return;
 	}
 	*/
-	if ( moveForward ) Gridpt.depthf++; else Gridpt.depthb++;
+	if ( moveForward ) Grid2p4.depthf++; else Grid2p4.depthb++;
+	// boolean trace = true;
 	boolean trace = false;
 	numMoves = gn.getNumMoves();
-	if (trace) System.out.println("\nGridpt.moveCnt " + Gridpt.moveCnt);
+	if (trace) System.out.println("\n-------------------------------------");
+	if (trace) System.out.println("\nGrid2p4.moveCnt " + Grid2p4.moveCnt);
 	if (trace) System.out.println("gn.id " + gn.id);
 	if (trace) System.out.println("gn.pos " + gn.pos);
 	if (trace) System.out.println("numMoves " + numMoves);
 	if (trace) System.out.println("moveForward " + moveForward);
-	// if (trace) System.out.println("Gridpt.depth " + Gridpt.depth);
-	if (trace) System.out.println("Gridpt.fCnt " + Gridpt.fCnt + 
-				      " Gridpt.bCnt " + Gridpt.bCnt);
-	if (trace) { Gridpt.show(); Gridpt.showd(); }
+	// if (trace) System.out.println("Grid2p4.depth " + Grid2p4.depth);
+	if (trace) System.out.println("Grid2p4.fCnt " + Grid2p4.fCnt + 
+				      " Grid2p4.bCnt " + Grid2p4.bCnt);
+	if (trace) { Grid2p4.show(); } // Grid2p4.showd(); }
 	// trace = false;
 
-	GNPt [] moves = gn.getMoves();
+	GN2p4 [] moves = gn.getMoves();
+
 	for (int k = 0; k < numMoves; k++) {
-	    GNPt gnk = moves[k];
-	    if ( block(gnk, moveForward) ) continue;
+	    GN2p4 gnk = moves[k];
 	    /*
 	    // don't enter the other territory:
 	    if ( moveForward ) {
-		if ( Gridpt.midpointy +2 < gnk.y ) continue;
+		if ( Grid2p4.midpointy +2 < gnk.y ) continue;
 	    } else {
-		if ( gnk.y < Gridpt.midpointy ) continue;
+		if ( gnk.y < Grid2p4.midpointy ) continue;
 	    }
 	    */
+
 	    if (trace) System.out.println("move f k gnk " + k + " " + gnk.id);
 	    if (trace) System.out.println("gnk.id " + gnk.id);
 	    if (trace) System.out.println("gnk.direction " + gnk.direction);
 	    if (trace) System.out.println("gnk.pos " + gnk.pos);
-	    /* See Gridp5 for using the hash-table locations (not available in 
+	    /* See Gridp5 for using the hash-table locations (available in this
 	       version) for recognizing a solution.  It finds grid locs that 
 	       were restored to empty after a backtrack (when restoration is 
 	       activated). */
@@ -355,62 +351,78 @@ class Nodegpt {
 		/*
 		  System.out.println();
 		  System.out.println("***********SOLUTION");
-		  System.out.println("Gridpt.moveCnt " + Gridpt.moveCnt);
+		  System.out.println("Grid2p4.moveCnt " + Grid2p4.moveCnt);
 		  System.out.println("f id " + gnk.id + " pos " + gnk.pos);
-		  System.out.println("Gridpt.fCnt + Gridpt.bCnt " + 
-		  (Gridpt.fCnt + Gridpt.bCnt));
-		  Gridpt.show(); 
-		  Gridpt.showd(); 
-		  // Gridpt.showv(); 
-		  // Gridpt.closef();
+		  System.out.println("Grid2p4.fCnt + Grid2p4.bCnt " + 
+		  (Grid2p4.fCnt + Grid2p4.bCnt));
+		  Grid2p4.show(); 
+		  Grid2p4.showd(); 
+		  // Grid2p4.showv(); 
+		  // Grid2p4.closef();
 		  System.exit(0);
 		  // */
-		synchronized(Gridpt.os) { Gridpt.solutionCnt++; }
-		// Gridpt.done = true; // terminate when a solution is found
+		synchronized(Grid2p4.os) { Grid2p4.solutionCnt++; }
+		Grid2p4.done = true; // terminate when a solution is found
 		/*
-		  System.out.println("----------- moveCnt " + Gridpt.moveCnt);
-		  System.out.println("move f FOUND SOLUTION # " + Gridpt.solutionCnt);
+		  System.out.println("----------- moveCnt " + Grid2p4.moveCnt);
+		  System.out.println("move f FOUND SOLUTION # " + Grid2p4.solutionCnt);
 		  // print the paths
 		  System.out.println("move other side: " + gnk.id);
-		  GNPt z = gnk.parent; 
+		  GN2p4 z = gnk.parent; 
 		  while (true) {
-		       if ( null == z ) break;
-		       System.out.println("move b z  " + z.id);
-		       z = z.parent;
+		  if ( null == z ) break;
+		  System.out.println("move b z  " + z.id);
+		  z = z.parent;
 		  }
 		  z = gn; 
 		  System.out.println("move this side: " + z.id);
 		  while (true) {
-		       if ( null == z ) break;
-		       System.out.println("move f z " + z.id);
-		       z = z.parent;
+		  if ( null == z ) break;
+		  System.out.println("move f z " + z.id);
+		  z = z.parent;
 		  }
 		  System.exit(0);
-		  // if ( 1000 <  Gridpt.moveCnt ) System.exit(0);
+		  // if ( 1000 <  Grid2p4.moveCnt ) System.exit(0);
 		  // */
 		return;
 	    }
 	    if ( 0 == gnk.direction ) { // can go there
 		synchronized(gnk) {
 		    // System.out.println("move f GO DEEPER " + gnk.id);
-		    if ( moveForward ) Gridpt.fCnt++; else Gridpt.bCnt++;
-		    gnk.pos = ( moveForward ? Gridpt.fCnt : Gridpt.bCnt );
-		    // gnk.fPathLng = gn.fPathLng+1;
+		    // fCnt & bCnt is different in this version !!
+		    if ( moveForward ) {
+			Grid2p4.fCnt++; Grid2p4.locations.put(gnk, "+");
+		    } else {
+			Grid2p4.bCnt++; Grid2p4.locations.put(gnk, "-");
+		    }
+		    gnk.pos = ( moveForward ? Grid2p4.fCnt : Grid2p4.bCnt );
 		    gnk.direction = ( moveForward ? 1 : -1 );
 		    gnk.parent = gn;
 		    gnk.visited = ( moveForward ? "+" : "-" );
-		    // Gridpt.fPathLng++;
+		    // Grid2p4.fPathLng++;
 		}
-		(new Nodegpt( moveForward, gnk)).move(gnk);
-		if ( Gridpt.done ) return;
-		/* // do (NOT) restore
-		   gnk.pos = 0;
-		   gnk.parent = null;
-		   gnk.direction = 0;
-		   gnk.fPathLng = gn.fPathLng-1;
-		   if ( moveForward ) Gridpt.fCnt--; else Gridpt.bCnt--;
+		// System.out.println("before recursion");
+		// Grid2p4.show();
+		// System.exit(0);
+		Nodeg2p4 n4 = (new Nodeg2p4(moveForward, gnk));
+		n4.move(gnk);
+		// (new Nodeg2p4(moveForward, gnk)).move(gnk);
+		if ( Grid2p4.done ) return;
+		// do (NOT) restore
+		Grid2p4.locations.remove(gnk);
+		gnk.pos = 0;
+		gnk.parent = null;
+		gnk.direction = 0;
+		if ( moveForward ) {
+		    gnk.fPathLng = gn.fPathLng-1;
+		    Grid2p4.fCnt--;
+		}
+		else {
+		    gnk.bPathLng = gn.bPathLng-1;
+		    Grid2p4.bCnt--;
+		}
 		   // */
-		// Gridpt.fPathLng--;
+		// Grid2p4.fPathLng--;
 		continue;
 	    } else { 
 		    // visited earlier
@@ -418,50 +430,36 @@ class Nodegpt {
 		continue;
 		// System.exit(0);
 	    }
-	} 
+	
+	} // end for-loop
 
-
-	// System.out.println("move BACKTRACK gn depth " + Gridpt.depth + 
+	// System.out.println("move BACKTRACK gn depth " + Grid2p4.depth + 
 	//			   " gn.id " + gn.id + " gn.pos " + gn.pos);
-	if ( moveForward ) Gridpt.depthf--; else Gridpt.depthb--;
+	if ( moveForward ) Grid2p4.depthf--; else Grid2p4.depthb--;
 	// return;
     } // end move
+} // end Nodeg2p4
 
-    // Check whether to block a move to gnk
-    boolean block(GNPt gnk, boolean forward) {
-	GNPt [] gnkMoves = gnk.getMoves();
-	int numMoves = gnk.numMoves;
-	for (int k = 0; k < numMoves; k++) {
-	    GNPt gnbk = gnkMoves[k];
-	    if ( 0 == gnbk.pos ) return false; // found a move
-	    if ( (forward && gnbk.direction == -1) ||
-		 (!forward && gnbk.direction == 1)) return false; // found a solution
-	}
-	return true; // block the move
-    } // end block
-
-} // end Nodeg
-
-class GNPt {
+class GN2p4 {
     protected int x = 0;
     protected int y = 0;
     protected String id = "";
     protected int pos = 0;
-    protected GNPt north = null; 
-    protected GNPt east = null; 
-    protected GNPt south = null; 
-    protected GNPt west = null;
-    public void setNorth(GNPt n) { north = n; }
-    public void setEast(GNPt n) { east = n; }
-    public void setSouth(GNPt n) { south = n; }
-    public void setWest(GNPt n) { west = n; }
-    protected GNPt parent = null;
-    public void setParent(GNPt n) { parent = n; }
+    protected GN2p4 north = null; 
+    protected GN2p4 east = null; 
+    protected GN2p4 south = null; 
+    protected GN2p4 west = null;
+    public void setNorth(GN2p4 n) { north = n; }
+    public void setEast(GN2p4 n) { east = n; }
+    public void setSouth(GN2p4 n) { south = n; }
+    public void setWest(GN2p4 n) { west = n; }
+    protected GN2p4 parent = null;
+    public void setParent(GN2p4 n) { parent = n; }
     protected int direction = 0; // forward = 1; backward = -1
     protected int pathLength = -1;
     public void setPathLength(int x) { pathLength = x; }
-    protected GNPt [] moves = new GNPt[4];
-    public GNPt [] getMoves() { return moves; }
+    protected GN2p4 [] moves = new GN2p4[4];
+    public GN2p4 [] getMoves() { return moves; }
     protected int numMoves = -1;
     public int getNumMoves() { return numMoves; }
     protected int nextMove = 0;
@@ -470,4 +468,4 @@ class GNPt {
     protected int bPathLng = 0;
     protected String visited = " ";
 
-} // end GNPt
+} // end GN2p4

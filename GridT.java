@@ -38,7 +38,9 @@ public class GridT {
     // static final int lx = 60;
     // static final int lx = 80;
     // static final int lx = 100;
+
     static final int lx = 600;
+    // static final int ly = 1000; 
     static final int ly = 2000; 
 
     static GNT [][] grid = new GNT[lx][ly];
@@ -123,8 +125,8 @@ public class GridT {
 	System.out.println("timing " + (endTime-startTime));
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
-	// showd();
 	// show();
+	// showd();
 
     } // end main
 
@@ -211,9 +213,10 @@ class NodegT {
 	// moveForward = false; // unidirectional search
         // moveForward = (GridT.fPathLng <= GridT.bPathLng); // bidirectional search
 	// or:
-	GridT.moveForward = !GridT.moveForward;
-        moveForward = GridT.moveForward; // bidirectional search
-
+	// /*
+	  GridT.moveForward = !GridT.moveForward;
+	  moveForward = GridT.moveForward; // bidirectional search
+	// */
 	// findMoves sets numMoves and puts in moves candidate moves
 	// both directions eased
 	if ( moveForward ) GridT.findMoves(fs, 1); else GridT.findMoves(bs, -1);
@@ -236,6 +239,9 @@ class NodegT {
 		GNT gnk = moves[k];
 		String direction = GridT.locations.get(gnk);
 		if ( null == direction ) { // not visited
+		    if ( block(gnk, moveForward) ) {
+			continue;
+		    }
 		    // System.out.println("move f GO DEEPER " + gnk.id);
 		    GridT.locations.put(gnk, "+");
 		    GridT.fCnt++;
@@ -264,13 +270,14 @@ class NodegT {
 		}
 		if ( direction.equals("+") ) continue; // visited earlier
 		// a solution
-	       /*
+		/*
 		    System.out.println();
 		    System.out.println("Solution GridT.moveCnt " + GridT.moveCnt);
 		    System.out.println("f id " + gn.id + " pos " + gn.pos);
 		    System.out.println("f id " + gnk.id + " pos " + gnk.pos);
-		    GridT.show(); 
-		    GridT.showd(); 
+
+		    // GridT.show(); 
+		    // GridT.showd(); 
 		    // System.exit(0);
 		    // */
 		    GridT.solutionCnt++;
@@ -304,6 +311,9 @@ class NodegT {
 		// System.out.println("move b k gnk " + k + " " + gnk.id);
 		String direction = GridT.locations.get(gnk);
 		if ( null == direction ) { // not visited
+		    if ( block(gnk, moveForward) ) {
+			continue;
+		    }
 		    // System.out.println("move b GO DEEPER " + gnk.id);
 		    GridT.locations.put(gnk, "-");
 		    GridT.bCnt++;
@@ -337,8 +347,9 @@ class NodegT {
 		    System.out.println("Solution GridT.moveCnt " + GridT.moveCnt);
 		    System.out.println("b id " + gn.id + " pos " + gn.pos);
 		    System.out.println("b id " + gnk.id + " pos " + gnk.pos);
-		    GridT.show(); 
-		    GridT.showd(); 
+		    */
+		    // GridT.show(); 
+		    // GridT.showd(); 
 		    // System.exit(0);
 		    // */
 		    GridT.solutionCnt++;
@@ -372,6 +383,19 @@ class NodegT {
 	GridT.depth--;
 	// return;
     } // end move
+
+    // Check whether to block a move to gnk
+    boolean block(GNT gnk, boolean forward) {
+	GNT [] gnkMoves = gnk.getMoves();
+	int numMoves = gnk.numMoves;
+	for (int k = 0; k < numMoves; k++) {
+	    GNT gnbk = gnkMoves[k];
+	    if ( 0 == gnbk.pos ) return false; // found a move
+	    if ( (forward && gnbk.direction == -1) ||
+		 (!forward && gnbk.direction == 1)) return false; // found a solution
+	}
+	return true; // block the move
+    } // end block
 } // end NodegT
 
 class GNT {

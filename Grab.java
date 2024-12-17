@@ -1,7 +1,6 @@
 // File: c:/ddc/Java/Knight/Grabjava
-// Date: Fri Apr 22 19:12:42 2022, Sat Nov 12 21:00:02 2022
+// Date: Fri Apr 22 19:12:42 2022
 // (C) OntoOO/ Dennis de Champeaux
-
 /*
   This code is parametrized regarding::
      The sizes of the grid
@@ -12,6 +11,7 @@
         (hamering is adding moves in the wrong direction)
      Restore or not the search space after a recursive call
  */
+
 import java.io.*;
 import java.util.*;
 /*
@@ -35,12 +35,12 @@ public class Grab {
     // static final int lx = 70; 
     // static final int lx = 80; 
     // static final int lx = 90; 
-    // static final int lx = 100; 
+    static final int lx = 100; 
     // static final int lx = 200; 
     // static final int lx = 300; 
     // static final int lx = 400; 
     // static final int lx = 500; 
-    static final int lx = 600;
+    // static final int lx = 600;
  
     // static final int ly = 12; 
     // static final int ly = 45; 
@@ -52,7 +52,7 @@ public class Grab {
     // static final int ly = 75; 
     // static final int ly = 80; 
     // static final int ly = 85; 
-    // static final int ly = 90; 
+    //static final int ly = 90; 
     // static final int ly = 95; 
     // static final int ly = 100; 
     static final int ly = 2000; 
@@ -144,7 +144,8 @@ public class Grab {
     static public void show1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
 	int n = grid[i][j].pos;
-	System.out.print( (n < 10 ? "  " + n : " " + n));
+	if ( 0 == n ) System.out.print("   "); else
+	    System.out.print( (n < 10 ? "  " + n : " " + n));
     } //
     static public void show() {
 	for ( int j = 0; j < lx; j++ ) {
@@ -220,13 +221,19 @@ class Nodeb {
 	if (Grab.done) return;
 	Grab.depth++;
 	// Select one of the next three
-	// moveForward = true; // unidirectional search
+        moveForward = true; // unidirectional search
 	// moveForward = false; // unidirectional search
 	// bidirectional search
+	/*
 	if ( Grab.moveBidirection ) Grab.moveForward = !Grab.moveForward; else
 	    Grab.moveForward = true; // or set to false
 	moveForward = Grab.moveForward;
-
+	// */
+	/*
+	    System.out.println("moveForward " + moveForward + 
+			       " moveCnt " + Grab.moveCnt);
+	    // System.exit(0);
+	// */
 	// findMoves sets numMoves and puts in moves candidate moves
 	// both not hampered
 	if ( moveForward ) Grab.findMoves(fs, 1); else Grab.findMoves(bs, -1);
@@ -252,62 +259,79 @@ class Nodeb {
 			// System.exit(0)
 			continue; // more than 1 solution;
 		    }
-		    if ( null != direction && direction.equals("+") ) continue;
+		    if ( null != direction && direction.equals("+") ) {
+			continue;
+		    }
 		    // if ( 1 == gnk.direction ) continue;
 		    if ( Grab.fLevel < gnk.y ) continue; // because ...
+		    // check whether safe
+		    if ( block(gnk, moveForward) ) {
+			continue;
+		    }
 		    Grab.locations.put(gnk, "+");
 		    gnk.direction = 1;
 		    Grab.fCnt++;
 		    gnk.pos = Grab.fCnt;
 		    (new Nodeb(gnk, bs)).move();
-		    // Grab.locations.remove(gnk);
+		    if ( Grab.done ) return;
 		    /* restore (or not)
+		    Grab.locations.remove(gnk);
 		    gnk.pos = 0;
 		    gnk.direction = 0;
 		    Grab.fCnt--;
 		    // */
 		    continue;
 		}
-		if ( null != direction ) continue;
-		// if ( 0 != gnk.direction ) continue;
+		if ( null != direction ) {
+		    continue;
+		}
+		// check whether safe
+		if ( block(gnk, moveForward) ) {
+		    continue;
+		}
 		Grab.locations.put(gnk, "+");
 		gnk.direction = 1;
 		Grab.fCnt++;
 		if ( Grab.fLevel < gnk.y ) Grab.fLevel = gnk.y;
 		gnk.pos = Grab.fCnt;
 		(new Nodeb(gnk, bs)).move();
-		// Grab.locations.remove(gnk);
+		if ( Grab.done ) return;
 		/* restore (or not)
+		  Grab.locations.remove(gnk);
 		  gnk.pos = 0;
 		  gnk.direction = 0;
 		  Grab.fCnt--;
 	        // */
-	    }
+	    } // end of forward for-loop
 	} else { // move backward
 	    for (int k = 0; k < numMoves; k++) {
 		GNB gnk = moves[k];
 		String direction = Grab.locations.get(gnk);
 		if (Grab.bLevel <= Grab.fLevel) { // possible solution
 		    if ( null != direction && direction.equals("+") ) {
-		    // if ( 1 == gnk.direction ) {
 			// System.out.println("move b SOLUTION " + gn.pos);
 			Grab.solutionCnt++;
 			// Grab.show(); 
 			// Grab.showd(); 
+			// System.out.println("RRR");
 			// { Grab.done = true; return; } // terminate with one
 			// System.exit(0);
 			continue; // more than 1 solution
 		    }
 		    if ( null != direction && direction.equals("-") ) continue;
-		    // if ( -1 == gnk.direction ) continue;
 		    if ( gnk.y < Grab.bLevel ) continue; // because ...
+		    // check whether safe
+		    if ( block(gnk, moveForward) ) {
+			continue;
+		    }
 		    Grab.locations.put(gnk, "-");
 		    gnk.direction = -1;
 		    Grab.bCnt++;
 		    gnk.pos = Grab.bCnt;
 		    (new Nodeb(fs, gnk)).move();
-		    // Grab.locations.remove(gnk);
+		    if ( Grab.done ) return;
 		    /* restore (or not)
+		      Grab.locations.remove(gnk);
 		      gnk.pos = 0;
 		      gnk.direction = 0;
 		      Grab.bCnt--;
@@ -315,23 +339,41 @@ class Nodeb {
 		    continue;
 		}
 		if ( null != direction ) continue;
-		// if ( 0 != gnk.direction ) continue;
+		// check whether safe
+		if ( block(gnk, moveForward) ) {
+		    continue;
+		}
 		Grab.locations.put(gnk, "-");
 		gnk.direction = -1;
-		Grab.bCnt++;
+		Grab.bCnt++; 
 		if ( gnk.y < Grab.bLevel ) Grab.bLevel = gnk.y;
 		gnk.pos = Grab.bCnt;
 		(new Nodeb(fs, gnk)).move();
-		// Grab.locations.remove(gnk);
+		if ( Grab.done ) return;
 		/*  restore (or not)
+		  Grab.locations.remove(gnk);
 		  gnk.pos = 0;
 		  gnk.direction = 0;
 		  Grab.bCnt--;
 	        // */
-	    } 
+	    } // end of backtrack for loop
 	}
 	Grab.depth--;
     } // end move
+
+    // Check whether to block a move to gnk
+    boolean block(GNB gnk, boolean forward) {
+	GNB [] gnkMoves = gnk.getMoves();
+	int numMoves = gnk.numMoves;
+	for (int k = 0; k < numMoves; k++) {
+	    GNB gnbk = gnkMoves[k];
+	    if ( 0 == gnbk.pos ) return false; // found a move
+	    if ( (forward && gnbk.direction == -1) ||
+		 (!forward && gnbk.direction == 1)) return false; // found a solution
+	}
+	return true; // block the move
+    } // end block
+
 } // end Nodeb
 
 class GNB {

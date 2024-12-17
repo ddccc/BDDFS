@@ -1,4 +1,4 @@
-// File: c:/ddc/Java/Knight/GridB.java
+// File: c:/ddc/Java/Knight/GridBt.java
 // Date: Thu Sep 22 19:54:19 2022
 // (C) OntoOO/ Dennis de Champeaux
 import java.io.*;
@@ -221,6 +221,9 @@ public class GridBt {
 		}
 		String direction = GridBt.locations.get(gnk);
 		if ( null == direction ) {
+		    if ( block(gnk, true) ) {
+			continue;
+		    }
 		    // go down and continue
 		    GridBt.locations.put(gnk, "+");
 		    GridBt.fCnt++;
@@ -280,6 +283,9 @@ public class GridBt {
 		}
 		String direction = GridBt.locations.get(gnk);
 		if ( null == direction ) {
+		    if ( block(gnk, false) ) {
+			continue;
+		    }
 		    // go down and continue
 		    GridBt.locations.put(gnk, "-");
 		    GridBt.bCnt++;
@@ -326,6 +332,17 @@ public class GridBt {
 
     } // end main
 
+    static boolean block(GNBt gnk, boolean forward) {
+	GNBt [] gnkMoves = gnk.getMoves();
+	int numMoves = gnk.numMoves;
+	for (int k = 0; k < numMoves; k++) {
+	    GNBt gnbk = gnkMoves[k];
+	    if ( 0 == gnbk.pos ) return false; // found a move
+	    if ( (forward && gnbk.direction == -1) ||
+		 (!forward && gnbk.direction == 1)) return false; // found a solution
+	}
+	return true; // block the move
+    } // end block
 
     static public void show1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);

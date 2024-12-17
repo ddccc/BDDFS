@@ -1,9 +1,10 @@
-// File: c:/ddc/Java/Knight/GridB.java
-// Date: Thu Sep 22 19:54:19 2022, Sat Nov 12 21:04:16 2022
+// File: c:/ddc/Java/Knight/Gridpp.java
+// Date: Sun Fri Dec 06 11:07:24 2024
 // (C) OntoOO/ Dennis de Champeaux
 
 /*
   This code is parametrized regarding::
+     Number of barriers
      The sizes of the grid
      Search direction
      Trace output generated
@@ -19,7 +20,7 @@ import java.io.*;
 import java.util.*;
 
 /*  Two stack variant 
-     This version uses the Grid4 version of the algorithm.
+     This version uses the GridB version of the algorithm.
 
 */
 
@@ -30,7 +31,7 @@ Y
          South  
 0-0                  X
  */
-public class GridB {
+public class Gridpp {
     // static Date date = new Date();
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
@@ -39,7 +40,7 @@ public class GridB {
     // static final int lx = 6; 
     // static final int lx = 10; 
     // static final int lx = 15; 
-    static final int lx = 20; 
+    static final int lx = 20; // paper
     // static final int lx = 25; 
     // static final int lx = 30; 
     // static final int lx = 35; 
@@ -68,17 +69,18 @@ public class GridB {
     // static final int ly = 800;
     // static final int ly = 1600;
     // static final int ly = 1800;
-    static final int ly = 2000;
+    // static final int ly = 2000;
     // static final int ly = 3200;
     // static final int ly = 6400;
     // static final int ly = 12800;
     
     // static final int ly = 1800; 
     // static final int ly = 2000; 
-    // static final int ly = 2100; // 
+    // static final int ly = 2100; 
 
+    static final int ly = 20000; // paper
 
-    static GNB2 [][] grid = new GNB2[lx][ly];
+    static GNpp [][] grid = new GNpp[lx][ly];
     static int moveCnt = 0; 
     static int solutionCnt = 0; 
     static int fCnt = 1;
@@ -88,34 +90,40 @@ public class GridB {
     // static int fdepth = 0;
     // static int bdepth = 0;
 
-    // /*
+    /*
     static int bx = ly/3;
     static int barrier1 = bx - 1;
     static int barrier2 = ly - bx;
     // */
+    static int numBarriers = 2; // 4, 6, ..
+    // static int numBarriers = 4; // 4, 6, ..
+    // static int numBarriers = 6; // 4, 6, ..
+    // static int numBarriers = 8; // 4, 6, ..
+    // static int numBarriers = 10; // 4, 6, .. // paper
+    static int barrierDistance = ly/(numBarriers+1);
 
     // select one
     static boolean bidirection = true;
     // static boolean bidirection = false;
 
-    static Hashtable<GNB2,String> locations = new Hashtable<GNB2,String>();
+    static Hashtable<GNpp,String> locations = new Hashtable<GNpp,String>();
 
     static boolean donef = false; 
-    static boolean doneb = ( !bidirection ? true : false ); 
+    static boolean doneb = false;
 
-    static Stack<SItemB> fStack = new Stack<SItemB>();
-    static Stack<SItemB> bStack = new Stack<SItemB>();
+    static Stack<SItempp> fStack = new Stack<SItempp>();
+    static Stack<SItempp> bStack = new Stack<SItempp>();
     static boolean flip = true;
 
 
     public static void main(String[] args) {
-	if ( !GridB.bidirection ) doneb = true;
+	if ( !Gridpp.bidirection ) doneb = true;
 	System.out.println("bidirection " + bidirection +
 			   " lx " + lx +
 			   " ly " + ly); //  + " barrier1 " + barrier1 + 
 	                                 // " barrier2 " + barrier2);
 	for ( int i = 0; i < lx; i++ )
-	    for ( int j = 0; j < ly; j++ ) grid[i][j] = new GNB2();
+	    for ( int j = 0; j < ly; j++ ) grid[i][j] = new GNpp();
 	for ( int i = 0; i < lx; i++ ) {
 	    if ( 0 == i ) {
 		for ( int j = 0; j < ly; j++ ) {
@@ -147,202 +155,83 @@ public class GridB {
 		}	
 	    }
 	}
-	///*
-	// make barriers
-	for ( int k = 0; k < lx-1; k++ ) {
-	    grid[k][barrier1].south = null; 
-	    grid[k][barrier1-1].north = null; 
-	}
-	// grid[lx-1][barrier1].east = null;
 
-	for ( int k = 1; k < lx; k++ ) {
-	    grid[k][barrier2].north = null; 
-	    grid[k][barrier2+1].south = null; 
+	// make barriers
+	int yb = barrierDistance;
+	for ( int n = 0; n < numBarriers/2; n++ ) {
+	    for ( int k = 0; k < lx-1; k++ ) {
+		grid[k][yb].south = null; 
+		grid[k][yb-1].north = null; 
+	    }
+	    yb = yb + barrierDistance;
+	    for ( int k = 1; k < lx; k++ ) {
+		grid[k][yb].north = null; 
+		grid[k][yb+1].south = null; 
+	    }
 	}
-	// grid[0][barrier2].west = null;
 
 	for ( int i = 0; i < lx; i++ ) 
 	    for ( int j = 0; j < ly; j++ ) {
-		GNB2 gnij = grid[i][j];
+		GNpp gnij = grid[i][j];
 		gnij.x = i; gnij.y = j;
 		gnij.id = i + "-" + j;
 		findMoves(gnij, 0);
 	    }
-	// */
 	/*
-	// check the new barriers
+	// check new barriers
+	int barrierX = 2* barrierDistance;
 	for ( int k = 0; k < lx; k++ ) {
 	    System.out.print(k + " ");
-	    GNB2 gnj = grid[k][barrier2]; // or barrier1
-	    System.out.print("north " + gnj.north);
-	    System.out.println(" south " + gnj.south);
-	    System.out.print(" west " + gnj.west);
-	    System.out.println(" east " + gnj.east);
+	    GNpp gnj = grid[k][barrierX]; // or ...
+	    System.out.print("gnj " + gnj.id);
+	    // System.out.print(" north " + gnj.north.id);
+	    System.out.print(" north " + (null== gnj.north ? null : gnj.north.id));
+	    // System.out.println(" south " + gnj.south.id);
+	    System.out.println(" south " + (null== gnj.south ? null : gnj.south.id));
+	    // System.out.print(" west " + gnj.west.id);
+	    System.out.print(" west " + (null== gnj.west ? null : gnj.west.id));
+	    // System.out.println(" east " + gnj.east.id);
+	    System.out.println(" east " + (null== gnj.east ? null : gnj.east.id));
 	    System.out.println();
 	}
 	// */
-	/*
-	int x = barrier1; int y = barrier1-1; 
-	System.out.print("barrier1 " +  barrier1 + " " + (barrier1-1) +
-			 " barrier2 " +  barrier2 + " " + (barrier2+1));
-	System.out.println();
-	*/
-
-
-	GNB2 startState = grid[0][0]; startState.fPathLng = 0; 
-	startState.direction = 1; startState.pos = 1; startState.visited = "+";
-	GridB.locations.put(startState, "+");
-	GNB2 goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
-	// GNB2 goalState = grid[0][ly-1]; goalState.bPathLng = 0;
-	goalState.direction = -1; goalState.pos = 1; goalState.visited = "-";
-	GridB.locations.put(goalState, "-");
-	showg(startState); showg(goalState); 
-	System.out.println("---");
 	// showd(); showv(); 
 	// System.exit(0);
 
+
+
+	GNpp startState = grid[0][0]; startState.fPathLng = 0; 
+	startState.direction = 1; startState.pos = 1; startState.visited = "+";
+	Gridpp.locations.put(startState, "+");
+	GNpp goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
+	// GNpp goalState = grid[0][ly-1]; goalState.bPathLng = 0;
+	goalState.direction = -1; goalState.pos = 1; goalState.visited = "-";
+	Gridpp.locations.put(goalState, "-");
+	showg(startState); showg(goalState); 
+	System.out.println("---");
+        // showd(); showv(); 
+	// System.exit(0);
 	// create 2 Sitems
-	SItemB startItem = new SItemB(startState, true);
-	GridB.fStack.push(startItem);
-	SItemB goalItem = new SItemB(goalState, false);
-	GridB.bStack.push(goalItem);
-
+	SItempp startItem = new SItempp(startState, true);
+	Gridpp.fStack.push(startItem);
+	SItempp goalItem = new SItempp(goalState, false);
+	Gridpp.bStack.push(goalItem);
+	Thread forward = new Thread(new Runnable() {
+		public void run() {
+		    move(fStack, true); } } );
+	Thread backward = new Thread(new Runnable() {
+		public void run() {
+		    move(bStack, false); } } );
+	    
 	long startTime = System.currentTimeMillis();
-
-	while ( !donef || !doneb ) { // execution loop
-	    GridB.moveCnt++;
-	    // System.out.println("moveCnt " + GridB.moveCnt);
-	    // if ( 5000 < GridB.solutionCnt ) { 
-	    //    donef = true; doneb = true; continue; }
-	    if ( GridB.bidirection ) // select bi or uni direction
-	     	   GridB.flip = !GridB.flip;
-	    // System.out.println("moveCnt " + GridB.moveCnt);
-	    // System.out.println("move direction " + GridB.flip);
-	    // GridB.show(); GridB.showd();  // GridB.showv();
-
-	    if ( GridB.flip ) { // forward
-		if ( GridB.fStack.isEmpty() ) { donef = true; continue; }
-		SItemB fItem = GridB.fStack.peek();
-		GNB2 gn = fItem.gn;
-		int fNumMoves = fItem.numMoves;
-		int fNumExplored = fItem.numExplored;
-		// fItem.show();
-		boolean found = false;
-		GNB2 gnk = null;
-		while ( fNumExplored < fNumMoves ) {
-		    gnk = fItem.moves[fNumExplored];  
-		    fItem.numExplored++; fNumExplored++;
-		    if ( 1 == gnk.direction ) continue;
-		    found = true;
-		    break;
-		}
-		if ( !found ) {
-		    // /* Do (NOT) restore:
-		    GridB.fCnt--;
-		    gn.pos = 0;
-		    gn.parent = null;
-		    gn.direction = 0;
-		    gn.visited = " ";
-		    // */
-		    GridB.fStack.pop();
-		    if ( GridB.fStack.isEmpty() ) { donef = true; continue; }
-		    // fItem = GridB.fStack.peek();
-		    // fItem.backTrack = gn;
-		    // GridB.showd(); 
-		    continue;
-		}
-		String direction = GridB.locations.get(gnk);
-		if ( null == direction ) {
-		    // go down and continue
-		    GridB.locations.put(gnk, "+");
-		    GridB.fCnt++;
-		    gnk.pos = GridB.fCnt;
-		    // gnk.fPathLng = gn.fPathLng+1;
-		    gnk.direction = 1;
-		    gnk.parent = gn;
-		    gnk.visited = "+";
-		    // GridB.fPathLng++;
-		    SItemB sgnk = new SItemB(gnk, true);
-		    GridB.fStack.push(sgnk);
-		    continue;
-		}
-		if ( direction.equals("+") ) continue; // visited earlier
-		// direction.equals("-")
-		// a solution
-		// GridB.show(); 
-		// GridB.showd(); 
-		GridB.solutionCnt++;
-		{ donef = true; doneb = true; } // for termination
-		/*
-		  show here 		      
-		*/
-		GridB.fStack.pop(); // backtrack
-		if ( GridB.fStack.isEmpty() ) { donef = true; continue; }
-		continue;
-	    } else { // backward
-		if ( GridB.bStack.isEmpty() ) { doneb = true; continue; }
-		SItemB bItem = GridB.bStack.peek();
-		GNB2 gn = bItem.gn;
-		int bNumMoves = bItem.numMoves;
-		int bNumExplored = bItem.numExplored;
-		// bItem.show();
-		boolean found = false;
-		GNB2 gnk = null;
-		while ( bNumExplored < bNumMoves ) {
-		    gnk = bItem.moves[bNumExplored];  
-		    bItem.numExplored++; bNumExplored++;
-		    if ( -1 == gnk.direction ) continue;
-		    found = true;
-		    break;
-		}
-		if ( !found ) {
-		    // /* Do (NOT) restore:
-		    GridB.bCnt--;
-		    gn.pos = 0;
-		    gn.parent = null;
-		    gn.direction = 0;
-		    gn.visited = " ";
-		    // */
-		    GridB.bStack.pop();
-		    if ( GridB.bStack.isEmpty() ) { doneb = true; continue; }
-		    // bItem = GridB.bStack.peek();
-		    // bItem.backTrack = gn;
-		    // GridB.showd(); 
-		    continue;
-		}
-		String direction = GridB.locations.get(gnk);
-		if ( null == direction ) {
-		    // go down and continue
-		    GridB.locations.put(gnk, "-");
-		    GridB.bCnt++;
-		    gnk.pos = GridB.bCnt;
-		    // gnk.bPathLng = gn.bPathLng+1;
-		    gnk.direction = -1;
-		    gnk.parent = gn;
-		    gnk.visited = "-";
-		    // GridB.fPathLng++;
-		    SItemB sgnk = new SItemB(gnk, false);
-		    GridB.bStack.push(sgnk);
-		    continue;
-		}
-		if ( direction.equals("-") ) continue; // visited earlier
-		// direction.equals("+")
-		// a solution
-		// GridB.show(); 
-		// GridB.showd(); 
-		GridB.solutionCnt++;
-		{ donef = true; doneb = true; } // for termination
-		/*
-		  show here 		      
-		*/
-		GridB.bStack.pop(); // backtrack
-		if ( GridB.bStack.isEmpty() ) { donef = true; continue; }
-		continue;
-		
-	    }
-	} // end while
-
-
+	// backward.start(); // to change the order
+	forward.start();
+	backward.start();
+	try { // wait for them to terminate
+	    forward.join();
+	    backward.join();
+	} catch (InterruptedException e) {}
+	
 	long endTime = System.currentTimeMillis();
 	System.out.println("\ntiming " + (endTime-startTime));
 	System.out.println("solutionCnt " + solutionCnt);
@@ -353,12 +242,161 @@ public class GridB {
 	show();  // pos numbers	
 	showd(); // f & b
 	showv(); // + & -
-	// System.out.println("\nGridB.fCnt " + GridB.fCnt + 
-	//	   " GridB.bCnt " + GridB.bCnt);
 	// */
+	System.out.println("\nGridpp.fCnt " + Gridpp.fCnt + 
+		   " Gridpp.bCnt " + Gridpp.bCnt);
 
-    } // end main
 
+        } // end main
+
+    static public void move(Stack<SItempp> stack, boolean moveForward) {
+	// boolean moveForward = item.moveForward;
+	while ( true) {
+	    if (stack.empty() ) { // synchronize
+		if (moveForward) { Gridpp.donef = true; return; }
+		else { Gridpp.doneb = true; return; }
+	    }
+	    if ( Gridpp.donef || Gridpp.doneb ) return;
+
+	    Gridpp.moveCnt++; // synchronize
+	    // System.out.println("moveCnt " + Gridpp.moveCnt);
+	    // System.out.println("moveCnt " + Gridpp.moveCnt);
+	    // System.out.println("move direction " + Gridpp.flip);
+	    // Gridpp.show(); Gridpp.showd();  // Gridpp.showv();
+
+
+	    if ( moveForward ) { // forward
+		SItempp fItem = Gridpp.fStack.peek();
+		GNpp gn = fItem.gn;
+		int fNumMoves = fItem.numMoves;
+		int fNumExplored = fItem.numExplored;
+		// fItem.show();
+		boolean found = false;
+		GNpp gnk = null;
+		while ( fNumExplored < fNumMoves ) {
+		    gnk = fItem.moves[fNumExplored];  
+		    fItem.numExplored++; fNumExplored++;
+		    if ( 1 == gnk.direction ) continue;
+		    found = true;
+		    break;
+		}
+		if ( !found ) {
+		    /* Do (NOT) restore:
+		    Gridpp.fCnt--;
+		    gn.pos = 0;
+		    gn.parent = null;
+		    gn.direction = 0;
+		    gn.visited = " ";
+		    // */
+		    Gridpp.fStack.pop();
+		    if ( Gridpp.fStack.isEmpty() ) { donef = true; continue; }
+		    // fItem = Gridpp.fStack.peek();
+		    // fItem.backTrack = gn;
+		    // Gridpp.showd(); 
+		    continue;
+		}
+		String direction = Gridpp.locations.get(gnk);
+		if ( null == direction ) {
+		    // go down and continue
+		    Gridpp.locations.put(gnk, "+");
+		    Gridpp.fCnt++;
+		    gnk.pos = Gridpp.fCnt;
+		    // gnk.fPathLng = gn.fPathLng+1;
+		    gnk.direction = 1;
+		    gnk.parent = gn;
+		    gnk.visited = "+";
+		    // Gridpp.fPathLng++;
+		    SItempp sgnk = new SItempp(gnk, true);
+		    Gridpp.fStack.push(sgnk);
+		    continue;
+		}
+		if ( direction.equals("+") ) continue; // visited earlier
+		// direction.equals("-")
+		// a solution
+		// Gridpp.show(); 
+		// Gridpp.showd(); 
+
+		Gridpp.solutionCnt++;
+		// for termination
+		{ Gridpp.donef = true;  Gridpp.doneb = true; } 
+		/*
+		show();
+		showd();
+		showv();
+		//*/
+		Gridpp.fStack.pop(); // backtrack
+		if ( Gridpp.fStack.isEmpty() ) { donef = true; continue; }
+		continue;
+	    } else { // backward
+		// if ( Gridpp.bStack.isEmpty() ) { doneb = true; continue; }
+		SItempp bItem = Gridpp.bStack.peek();
+		GNpp gn = bItem.gn;
+		int bNumMoves = bItem.numMoves;
+		int bNumExplored = bItem.numExplored;
+		// bItem.show();
+		boolean found = false;
+		GNpp gnk = null;
+		while ( bNumExplored < bNumMoves ) {
+		    gnk = bItem.moves[bNumExplored];  
+		    bItem.numExplored++; bNumExplored++;
+		    if ( -1 == gnk.direction ) continue;
+		    found = true;
+		    break;
+		}
+		if ( !found ) {
+		    /* Do (NOT) restore:
+		    Gridpp.bCnt--;
+		    gn.pos = 0;
+		    gn.parent = null;
+		    gn.direction = 0;
+		    gn.visited = " ";
+		    // */
+		    Gridpp.bStack.pop();
+		    if ( Gridpp.bStack.isEmpty() ) { doneb = true; continue; }
+		    // bItem = Gridpp.bStack.peek();
+		    // bItem.backTrack = gn;
+		    // Gridpp.showd(); 
+		    continue;
+		}
+		String direction = Gridpp.locations.get(gnk);
+		if ( null == direction ) {
+		    // go down and continue
+		    Gridpp.locations.put(gnk, "-");
+		    Gridpp.bCnt++;
+		    gnk.pos = Gridpp.bCnt;
+		    // gnk.bPathLng = gn.bPathLng+1;
+		    gnk.direction = -1;
+		    gnk.parent = gn;
+		    gnk.visited = "-";
+		    // Gridpp.fPathLng++;
+		    SItempp sgnk = new SItempp(gnk, false);
+		    Gridpp.bStack.push(sgnk);
+		    continue;
+		}
+		if ( direction.equals("-") ) continue; // visited earlier
+		// direction.equals("+")
+		// a solution
+		// Gridpp.show(); 
+		// Gridpp.showd(); 
+		/*
+		System.out.println("gnk.x " + gnk.x + " .y " + gnk.y + " pos " +
+				   gnk.pos);
+		System.out.println("fCnt " + Gridpp.fCnt + " bCnt " + Gridpp.bCnt);
+		*/
+		Gridpp.solutionCnt++;
+		{ donef = true; doneb = true; } // for termination
+		/*
+		show();
+		showd();
+		showv();
+		//*/
+		Gridpp.bStack.pop(); // backtrack
+		if ( Gridpp.bStack.isEmpty() ) { donef = true; continue; }
+		continue;
+	    }
+	} // end while
+
+    } // end move
 
     static public void show1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
@@ -413,24 +451,24 @@ public class GridB {
 	}
     } // end showv
 
-    static public void showg(GNB2 gn) {
+    static public void showg(GNpp gn) {
 	System.out.println(gn.id);
 	System.out.println("direction " + gn.direction);
 	int numMoves = gn.getNumMoves();
 	System.out.println("numMoves " + numMoves);
-	GNB2 [] moves = gn.getMoves();
+	GNpp [] moves = gn.getMoves();
 	for (int k = 0; k < numMoves; k++) {
 	    System.out.print(k + " ");
-	    GNB2 gnk = moves[k];
+	    GNpp gnk = moves[k];
 	    System.out.print(gnk.id + " ");
 	}
 	System.out.println();
     }
 
-    static void findMoves(GNB2 gn, int dr) {
+    static void findMoves(GNpp gn, int dr) {
 	// set numMovesand puts in moves candidate moves
 	gn.numMoves = 0;
-	GNB2 gnn = gn.north;
+	GNpp gnn = gn.north;
 	if ( null != gnn && dr != -1 ) { 
 	    gn.moves[gn.numMoves] = gnn; gn.numMoves++; }
 	gnn = gn.south;
@@ -445,66 +483,66 @@ public class GridB {
 	scramble(gn.numMoves, gn.moves); // optional
     } // end findMoves
     // /*
-    static void scramble(int numMoves, GNB2 [] moves) { 
+    static void scramble(int numMoves, GNpp [] moves) { 
 	// change order of the candidate moves in a GN
 	// System.out.println("scramble numMoves " + numMoves);
 	for (int i = 0; i < numMoves; i++) {
 	    int a = random.nextInt(numMoves);
 	    int b = random.nextInt(numMoves);
 	    // System.out.println("scramble a b " + a + " " + b);
-	    GNB2 t = moves[a]; moves[a] = moves[b]; moves[b] = t;
+	    GNpp t = moves[a]; moves[a] = moves[b]; moves[b] = t;
 	}
     } // end scramble()
     // */
-} // end GridB
+} // end Gridpp
 
-class SItemB {
-    protected GNB2 gn;
+class SItempp {
+    protected GNpp gn;
     protected boolean moveForward = false;
     protected int numMoves = 0;
-    protected GNB2 [] moves = new GNB2[4];
+    protected GNpp [] moves = new GNpp[4];
     protected int numExplored = 0;
     // protected boolean backTrack = false;
-    SItemB(GNB2 gnx, boolean b) {
+    SItempp(GNpp gnx, boolean b) {
 	gn = gnx; moveForward = b;
 	// sets moves & nummoves 
 	// forward and backward easied:
-	if ( moveForward ) GridB.findMoves(gn, 1); else GridB.findMoves(gn, -1);
+	// if ( moveForward ) Gridpp.findMoves(gn, 1); else Gridpp.findMoves(gn, -1);
 	// forward hampered and backward easied:
-	// if ( moveForward ) GridB.findMoves(gn, 2); else GridB.findMoves(gn, -1);
+	// if ( moveForward ) Gridpp.findMoves(gn, 2); else Gridpp.findMoves(gn, -1);
 	// forward and backward hampered:
-	// if ( moveForward ) GridB.findMoves(gn, 2); else GridB.findMoves(gn, -2);
+	if ( moveForward ) Gridpp.findMoves(gn, 2); else Gridpp.findMoves(gn, -2);
 	numMoves = gn.numMoves;
 	moves = gn.moves;
     }
     /*
     public void show() { 
-	System.out.println("SItemB moveForward " +  moveForward);
+	System.out.println("SItempp moveForward " +  moveForward);
 	System.out.println("numMoves " + numMoves + " numExplored " + numExplored);
     }
     */
-} // end SItemB
+} // end SItempp
 
-class GNB2 {
+class GNpp {
     protected int x = 0;
     protected int y = 0;
     protected String id = "";
     protected int pos = 0;
-    protected GNB2 north = null; 
-    protected GNB2 east = null; 
-    protected GNB2 south = null; 
-    protected GNB2 west = null;
-    public void setNorth(GNB2 n) { north = n; }
-    public void setEast(GNB2 n) { east = n; }
-    public void setSouth(GNB2 n) { south = n; }
-    public void setWest(GNB2 n) { west = n; }
-    protected GNB2 parent = null;
-    public void setParent(GNB2 n) { parent = n; }
+    protected GNpp north = null; 
+    protected GNpp east = null; 
+    protected GNpp south = null; 
+    protected GNpp west = null;
+    public void setNorth(GNpp n) { north = n; }
+    public void setEast(GNpp n) { east = n; }
+    public void setSouth(GNpp n) { south = n; }
+    public void setWest(GNpp n) { west = n; }
+    protected GNpp parent = null;
+    public void setParent(GNpp n) { parent = n; }
     protected int direction = 0; // forward = 1; backward = -1
     protected int pathLength = -1;
     public void setPathLength(int x) { pathLength = x; }
-    protected GNB2 [] moves = new GNB2[4];
-    public GNB2 [] getMoves() { return moves; }
+    protected GNpp [] moves = new GNpp[4];
+    public GNpp [] getMoves() { return moves; }
     protected int numMoves = -1;
     public int getNumMoves() { return numMoves; }
     protected int nextMove = 0;
@@ -513,4 +551,4 @@ class GNB2 {
     protected int bPathLng = 0;
     protected String visited = " ";
 
-} // end GNB2
+} // end GNpp

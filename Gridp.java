@@ -67,7 +67,7 @@ public class Gridp {
 
     static boolean done = false; // for terminating when a solution is found
 
-    // static Hashtable<GNP,String> locations = new Hashtable<GNP,String>();
+    static Hashtable<GNP,String> locations = new Hashtable<GNP,String>();
 
     public static void main(String[] args) {
 	for ( int i = 0; i < lx; i++ )
@@ -148,6 +148,9 @@ public class Gridp {
 	// boolean backwardRunDone = false;
 	// 	Object os = new Object();
 	//    synchronized ( os ) {
+
+	// Aux aux = new Aux();
+
 	Nodegp fNode = new Nodegp(true, startState); // forward thread
 	Nodegp bNode = new Nodegp(false, goalState); // backward thread
 	// Thread currThread = Thread.currentThread();
@@ -165,8 +168,9 @@ public class Gridp {
 	backward.start();
 	try { // wait for them to terminate
 	    forward.join();
-	    // backward.join();
+	    backward.join();
 	} catch (InterruptedException e) {}
+
 	
 	long endTime = System.currentTimeMillis();
 	System.out.println("\ntiming " + (endTime-startTime));
@@ -331,6 +335,7 @@ class Nodegp {
 	GNP [] moves = gn.getMoves();
 	for (int k = 0; k < numMoves; k++) {
 	    GNP gnk = moves[k];
+	    if ( block(gnk, moveForward) ) continue;
 	    /*
 	    // don't enter the other territory:
 	    if ( moveForward ) {
@@ -343,6 +348,9 @@ class Nodegp {
 	    if (trace) System.out.println("gnk.id " + gnk.id);
 	    if (trace) System.out.println("gnk.direction " + gnk.direction);
 	    if (trace) System.out.println("gnk.pos " + gnk.pos);
+	    /* See Gridp5 for using the hash-table locations for recognizing 
+	       a solution.  It finds grid locs that were restored to empty
+	       after a backtrack (when restoration is activated). */
 	    if ( ( moveForward && -1 == gnk.direction ) ||
 		 ( !moveForward && 1 == gnk.direction ) ) { // a solution
 		// System.out.println("SOLUTION " + 
@@ -369,16 +377,16 @@ class Nodegp {
 		  System.out.println("move other side: " + gnk.id);
 		  GNP z = gnk.parent; 
 		  while (true) {
-		  if ( null == z ) break;
-		  System.out.println("move b z  " + z.id);
-		  z = z.parent;
+		       if ( null == z ) break;
+		       System.out.println("move b z  " + z.id);
+		       z = z.parent;
 		  }
 		  z = gn; 
 		  System.out.println("move this side: " + z.id);
 		  while (true) {
-		  if ( null == z ) break;
-		  System.out.println("move f z " + z.id);
-		  z = z.parent;
+		       if ( null == z ) break;
+		       System.out.println("move f z " + z.id);
+		       z = z.parent;
 		  }
 		  System.exit(0);
 		  // if ( 1000 <  Gridp.moveCnt ) System.exit(0);
@@ -386,9 +394,15 @@ class Nodegp {
 		return;
 	    }
 	    if ( 0 == gnk.direction ) { // can go there
-		synchronized(gnk) {
+		 // block check here
+		 if ( block(gnk, moveForward) ) continue;
+		 synchronized(gnk) {
 		    // System.out.println("move f GO DEEPER " + gnk.id);
-		    if ( moveForward ) Gridp.fCnt++; else Gridp.bCnt++;
+		    if ( moveForward ) {
+			Gridp.fCnt++; Gridp.locations.put(gnk, "+");
+		    } else {
+			Gridp.bCnt++; Gridp.locations.put(gnk, "-");
+		    }
 		    gnk.pos = ( moveForward ? Gridp.fCnt : Gridp.bCnt );
 		    // gnk.fPathLng = gn.fPathLng+1;
 		    gnk.direction = ( moveForward ? 1 : -1 );
@@ -399,6 +413,7 @@ class Nodegp {
 		(new Nodegp( moveForward, gnk)).move(gnk);
 		if ( Gridp.done ) return;
 		/* // do (NOT) restore
+		   Gridp.locations.remove(gnk);
 		   gnk.pos = 0;
 		   gnk.parent = null;
 		   gnk.direction = 0;
@@ -421,6 +436,20 @@ class Nodegp {
 	if ( moveForward ) Gridp.depthf--; else Gridp.depthb--;
 	// return;
     } // end move
+
+    // Check whether to block a move to gnk
+    boolean block(GNP gnk, boolean forward) {
+	GNP [] gnkMoves = gnk.getMoves();
+	int numMoves = gnk.numMoves;
+	for (int k = 0; k < numMoves; k++) {
+	    GNP gnbk = gnkMoves[k];
+	    if ( 0 == gnbk.pos ) return false; // found a move
+	    if ( (forward && gnbk.direction == -1) ||
+		 (!forward && gnbk.direction == 1)) return false; // found a solution
+	}
+	return true; // block the move
+    } // end block
+
 } // end Nodeg
 
 class GNP {

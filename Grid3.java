@@ -12,7 +12,11 @@
         (hampering is adding moves in the wrong direction)
      Restore or not the search space after a recursive call
  */
-
+/*
+   There is a section which should be disabled for unidirectional
+   search.
+   It prevents in bidirectional search to cross the mid-boundary
+ */
 
 import java.io.*;
 import java.util.*;
@@ -35,6 +39,7 @@ public class Grid3 {
     // static final int lx = 6; 
     // static final int ly = 10;
     // static final int ly = 12;
+    // static final int ly = 25;
     // static final int ly = 45;
     // static final int ly = 50;
     // static final int ly = 55;
@@ -60,8 +65,17 @@ public class Grid3 {
     // static final int lx = 40;   
     // static final int lx = 45;   
     // static final int lx = 50;   
+    // static final int lx = 55; 
+    // static final int lx = 60; 
+    // static final int lx = 65; 
+    // static final int lx = 70; 
+    // static final int lx = 75; 
+    // static final int lx = 80; 
+    // static final int lx = 85; 
+    // static final int lx = 90; 
+    // static final int lx = 95; 
+    // static final int lx = 100; 
 
-    // static final int lx = 100;   
     // static final int lx = 200;   
     // static final int lx = 300;   
     // static final int lx = 400;   
@@ -70,7 +84,8 @@ public class Grid3 {
     // static final int lx = 700;   
     // static final int lx = 800;   
     // static final int lx = 900;   
-    static final int lx = 1000;   
+    static final int lx = 1000; 
+  
     static final int ly = 2000;
 
     // static final int lx = 400;   
@@ -92,6 +107,7 @@ public class Grid3 {
     static boolean done = false; // for terminating when a solution is found
     static boolean moveForward = false; 
 
+    // locations maintains the status of occupied grid tiles
     static Hashtable<GN3,String> locations = new Hashtable<GN3,String>();
 
     public static void main(String[] args) {
@@ -179,8 +195,8 @@ public class Grid3 {
 	System.out.println("\ntiming " + (endTime-startTime));
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
+	// show();
 	/*
-	show();
 	showd();
 	showv();
 	System.out.println("Grid3.fCnt " + Grid3.fCnt + 
@@ -298,9 +314,10 @@ class Nodeg3 {
         // moveForward = (Grid3.fPathLng <= Grid3.bPathLng); // bidirectional search +
 	// moveForward = (Grid3.fCnt <= Grid3.bCnt); // bidirectional search
 	// or:
-	Grid3.moveForward = !Grid3.moveForward;
-	moveForward = Grid3.moveForward; // bidirectional search
-
+	// /*
+	   Grid3.moveForward = !Grid3.moveForward;
+	   moveForward = Grid3.moveForward; // bidirectional search
+	// */
 	// findMoves sets numMoves and puts in moves candidate moves
 	// both directions easied
 	if ( moveForward ) Grid3.findMoves(fs, 1); else Grid3.findMoves(bs, -1);
@@ -311,13 +328,17 @@ class Nodeg3 {
 	if ( Grid3.done ) return; // terminate
 	Grid3.depth++;
 	gn = ( moveForward ? fs : bs );
-	/* // do not activate for uni-directional search
+	// *********************************************
+	// do not activate for uni-directional search
+	// *********************************************
+	/*
 	if ( moveForward ) {
 	    if ( Grid3.midpointy + 1 <= gn.y ) return;
 	} else {
 	    if ( gn.y <= Grid3.midpointy -1) return;
 	}
-	*/
+	// */
+
 	boolean trace = false;
 	numMoves = gn.getNumMoves();
 	if (trace) System.out.println("\nGrid3.moveCnt " + Grid3.moveCnt);
@@ -340,6 +361,12 @@ class Nodeg3 {
 		if (trace) System.out.println("gnk.pos " + gnk.pos);
 		String direction = Grid3.locations.get(gnk);
 		if ( null == direction ) { // not visited
+		    if ( block(gnk, moveForward) ) {
+			// System.out.println("move forward block " + Grid2.moveCnt);
+			// Grid2.show(); 
+			// System.exit(0);
+			continue;
+		    }
 		    // System.out.println("move f GO DEEPER " + gnk.id);
 		    Grid3.locations.put(gnk, "+");
 		    Grid3.fCnt++;
@@ -355,8 +382,8 @@ class Nodeg3 {
 			Grid3.depth--;
 			return;
 		    }
-		    // Grid3.locations.remove(gnk);
 		    /*  do (NOT) restore
+		    Grid3.locations.remove(gnk); // ***
 		    gnk.pos = 0;
 		    gnk.parent = null;
 		    gnk.direction = 0;
@@ -375,7 +402,9 @@ class Nodeg3 {
 		    System.out.println("f id " + gnk.id + " pos " + gnk.pos);
 		    Grid3.show(); 
 		    Grid3.showd(); 
+		    Grid3.showv(); 
 		    // */
+
 		    Grid3.solutionCnt++;
 		    { Grid3.done = true; break; } // terminate with 1 solution
 		    /*
@@ -410,6 +439,12 @@ class Nodeg3 {
 		if (trace) System.out.println("gnk.pos " + gnk.pos);
 		String direction = Grid3.locations.get(gnk);
 		if ( null == direction ) { // not visited
+		    if ( block(gnk, moveForward) ) {
+			// System.out.println("move backward block " + Grid2.moveCnt);
+			// Grid2.show(); 
+			// System.exit(0);
+			continue;
+		    }
 		    // System.out.println("move b GO DEEPER " + gnk.id);
 		    Grid3.locations.put(gnk, "-");
 		    Grid3.bCnt++;
@@ -425,13 +460,13 @@ class Nodeg3 {
 			Grid3.depth--;
 			return;
 		    }
-		    // Grid3.locations.remove(gnk);
 		    /*  do (NOT) restore
+		    Grid3.locations.remove(gnk); // ****
 		    gnk.pos = 0;
 		    gnk.parent = null;
 		    gnk.direction = 0;
 		    // gnk.fPathLng = gn.fPathLng-1;
-		    Grid3.fCnt--;
+		    Grid3.bCnt--;
 		    // */
 		    // Grid3.fPathLng--;
 		    continue;
@@ -445,7 +480,9 @@ class Nodeg3 {
 		    System.out.println("b id " + gnk.id + " pos " + gnk.pos);
 		    Grid3.show(); 
 		    Grid3.showd(); 
+		    Grid3.showv(); 
 		    // */
+
 		    Grid3.solutionCnt++;
 		    { Grid3.done = true; break; } // terminate with 1 solution
 		    /*
@@ -470,15 +507,27 @@ class Nodeg3 {
 		    // return; // activate for more than 1 solution
 		    // Grid3.depth--;
 		    // return;
-	    }
-
-	}
+	    } // end for loop
+	} // end else
 	// System.out.println("move BACKTRACK gn depth " + Grid3.depth + 
 	//			   " gn.id " + gn.id + " gn.pos " + gn.pos);
 	Grid3.depth--;
 
 	// return;
     } // end move
+
+    // Check whether to block a move to gnk
+    boolean block(GN3 gnk, boolean forward) {
+	GN3 [] gnkMoves = gnk.getMoves();
+	int numMoves = gnk.numMoves;
+	for (int k = 0; k < numMoves; k++) {
+	    GN3 gnbk = gnkMoves[k];
+	    if ( 0 == gnbk.pos ) return false; // found a move
+	    if ( (forward && gnbk.direction == -1) ||
+		 (!forward && gnbk.direction == 1)) return false; // found a solution
+	}
+	return true; // block the move
+    } // end block
 } // end Nodeg3
 
 class GN3 {

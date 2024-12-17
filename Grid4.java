@@ -29,11 +29,11 @@ public class Grid4 {
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
     // static Random random = new Random(771); // repeatable results
-    static final int lx = 5;
+    // static final int lx = 5;
     // static final int lx = 6; 
     // static final int lx = 10; 
     // static final int lx = 15; 
-    // static final int lx = 20; 
+    static final int lx = 20; 
     // static final int lx = 25; 
     // static final int lx = 30; 
     // static final int lx = 35; 
@@ -47,7 +47,7 @@ public class Grid4 {
 
     // static final int ly = lx;
 
-    static final int ly = 12;
+    // static final int ly = 12;
     // static final int ly = 20;
     // static final int ly = 25;
     // static final int ly = 30;
@@ -59,8 +59,10 @@ public class Grid4 {
     // static final int ly = 300;
     // static final int ly = 400;
     // static final int ly = 800;
+    // static final int ly = 1000;
     // static final int ly = 1600;
-    // static final int ly = 2000;
+    // static final int ly = 1800;
+    static final int ly = 2000;
     // static final int ly = 3200;
     // static final int ly = 6400;
     // static final int ly = 12800;
@@ -189,7 +191,7 @@ public class Grid4 {
 	System.out.println("\ntiming " + (endTime-startTime));
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
-	// /*
+	/*
 	// show();
 	System.out.println();
 	show();  // pos numbers
@@ -340,6 +342,12 @@ class Nodeg4 {
 	    if ( gn.y <= Grid4.midpointy -1) return;
 	}
 	*/
+	/*
+	System.out.println("\nGrid4.moveCnt " + Grid4.moveCnt);
+	System.out.println("moveForward " + moveForward);
+	Grid4.show();
+	// */
+
 	boolean trace = false;
 	numMoves = gn.getNumMoves();
 	if (trace) System.out.println("\nGrid4.moveCnt " + Grid4.moveCnt);
@@ -355,6 +363,11 @@ class Nodeg4 {
 
 	GN4 [] moves = gn.getMoves();
 	if ( moveForward ) {
+	    /*
+	    System.out.println("Backward moveCnt " + Grid4.moveCnt);
+	    System.out.println("numMoves " +  numMoves);
+	    if (23 == Grid4.moveCnt) System.exit(0);
+	    */
 	    for (int k = 0; k < numMoves; k++) {
 		GN4 gnk = moves[k];
 		if (trace) System.out.println("move f k gnk " + k + " " + gnk.id);
@@ -363,6 +376,9 @@ class Nodeg4 {
 		if (trace) System.out.println("gnk.pos " + gnk.pos);
 		String direction = Grid4.locations.get(gnk);
 		if ( null == direction ) { // not visited
+		    if ( block(gnk, moveForward) ) {
+			continue;
+		    }
 		    // System.out.println("move f GO DEEPER " + gnk.id);
 		    Grid4.locations.put(gnk, "+");
 		    Grid4.fCnt++;
@@ -378,8 +394,8 @@ class Nodeg4 {
 			Grid4.depth--;
 			return;
 		    }
-		    // Grid4.locations.remove(gnk);
-		    /* // do (NOT) restore
+		    // do (NOT) restore
+		    Grid4.locations.remove(gnk);
 		    gnk.pos = 0;
 		    gnk.parent = null;
 		    gnk.direction = 0;
@@ -434,6 +450,7 @@ class Nodeg4 {
 		    return;
 	    }
 	} else { // move backward
+	    // System.out.println("Backward moveCnt " + Grid4.moveCnt);
 	    for (int k = 0; k < numMoves; k++) {
 		GN4 gnk = moves[k];
 		if (trace)  System.out.println("move b k gnk " + k + " " + gnk.id);
@@ -443,6 +460,9 @@ class Nodeg4 {
 		String direction = Grid4.locations.get(gnk);
 		if ( null == direction ) { // not visited
 		    // System.out.println("move f GO DEEPER " + gnk.id);
+		    if ( block(gnk, moveForward) ) {
+			continue;
+		    }
 		    Grid4.locations.put(gnk, "-");
 		    Grid4.bCnt++;
 		    gnk.pos = Grid4.bCnt;
@@ -458,8 +478,8 @@ class Nodeg4 {
 			return;
 		    }
 
-		    // Grid4.locations.remove(gnk);
-		    /* // do (NOT) restore
+		    // do (NOT) restore
+		    Grid4.locations.remove(gnk);
 		    gnk.pos = 0;
 		    gnk.parent = null;
 		    gnk.direction = 0;
@@ -506,16 +526,30 @@ class Nodeg4 {
 		    }
 		    System.exit(0);
 		    // */
+
 		    Grid4.depth--;
 		    return;
 	    }
 	}
 	// System.out.println("move BACKTRACK gn depth " + Grid4.depth + 
-	//			   " gn.id " + gn.id + " gn.pos " + gn.pos);
+	//	   " gn.id " + gn.id + " gn.pos " + gn.pos);
 	Grid4.depth--;
 
 	// return;
     } // end move
+
+    boolean block(GN4 gnk, boolean forward) {
+	GN4 [] gnkMoves = gnk.getMoves();
+	int numMoves = gnk.numMoves;
+	for (int k = 0; k < numMoves; k++) {
+	    GN4 gnbk = gnkMoves[k];
+	    if ( 0 == gnbk.pos ) return false; // found a move
+	    if ( (forward && gnbk.direction == -1) ||
+		 (!forward && gnbk.direction == 1)) return false; // found a solution
+	}
+	return true; // block the move
+    } // end block
+
 } // end Nodeg4
 
 
