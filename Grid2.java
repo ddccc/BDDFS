@@ -27,7 +27,7 @@ public class Grid2 {
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
     // static final int lx = 5; 
-    static final int lx = 6; 
+    // static final int lx = 6; 
     // static final int lx = 10;
     // static final int lx = 15; 
     // static final int lx = 20; 
@@ -40,6 +40,7 @@ public class Grid2 {
     // static final int lx = 90; 
     // static final int lx = 100; 
     // static final int lx = 200; 
+    static final int lx = 600; 
     // static final int lx = 2000; 
 
     // static final int ly = 10; 
@@ -60,10 +61,10 @@ public class Grid2 {
     // static final int ly = 85; 
     // static final int ly = 90; 
     // static final int ly = 95; 
-    static final int ly = 100; 
+    // static final int ly = 100; 
     // static final int ly = 500; 
     // static final int ly = 1800; 
-    // static final int ly = 2000;
+    static final int ly = 2000;
  
     static GN2 [][] grid = new GN2[lx][ly];
     static int moveCnt = 0; 
@@ -81,9 +82,11 @@ public class Grid2 {
     // static boolean bidirection = false;
 
     static Hashtable<GN2,String> locations = new Hashtable<GN2,String>();
+    static Hashtable<GN2,String> visited = new Hashtable<GN2,String>();
 
     static boolean flip = true;
     static boolean done = false;
+
 
     public static void main(String[] args) {
 	for ( int i = 0; i < lx; i++ )
@@ -248,18 +251,21 @@ class Nodeg2 {
 	   // moveForward = false; // unidirectional search
            // bidirectional search:
 	         // activate fPathLng & bPathLng first
-	         //  moveForward = (Grid2.fPathLng <= Grid2.bPathLng); 
+	         // moveForward = (Grid2.fPathLng <= Grid2.bPathLng); 
+	//  moveForward = Grid2.fCnt <= Grid2.bCnt; 
 	// /* alternate direction
 	     if ( Grid2.bidirection ) Grid2.flip = !Grid2.flip;
 	     if ( Grid2.flip ) moveForward = true; 
 	          else moveForward = false;
 	     // */
+	// if ( Grid2.bidirection ) Grid2.flip = !Grid2.flip;
+	// moveForward = Grid2.flip;
 
 	// findMoves sets numMoves and puts in moves candidate moves
 	    // forward and backward not hampered = eased:
 	    // if ( moveForward ) Grid2.findMoves(fs, 1); else Grid2.findMoves(bs, -1);
 	    // forward hampered:
-	     // if ( moveForward ) Grid2.findMoves(fs, 2); else Grid2.findMoves(bs, -1);
+	    // if ( moveForward ) Grid2.findMoves(fs, 2); else Grid2.findMoves(bs, -1);
 	    // both hampered:
 	    if ( moveForward ) Grid2.findMoves(fs, 2); else Grid2.findMoves(bs, -2);
     }
@@ -273,12 +279,23 @@ class Nodeg2 {
 			   " fs.pos " + fs.pos +
 			   " bs.pos " + bs.pos  );
 	// System.out.println("move fs.id " + fs.id + " bs.id " + bs.id);
+	System.out.println("moveCnt " + Grid2.moveCnt + " " + moveForward);
+	Grid2.show(); 
 	// */	
-
-	// if ( 4004 < Grid2.moveCnt) {  System.exit(0); 	}
-
 	gn = ( moveForward ? fs : bs );
-	gn.visitCnt++;
+	/*
+	System.out.println("moveCnt " + Grid2.moveCnt + 
+			   " " + moveForward  + " pos " + gn.pos);
+	Grid2.show(); 
+	if ( 64< Grid2.moveCnt)  System.exit(0); 
+	// */
+	/*
+	if ( 300 <= Grid2.moveCnt) {
+	    Grid2.show(); 
+	    System.exit(0); 
+	}
+	*/
+	gn.visitCnt++; // not used
 
 	// *********************************************
     	// Do not activate for unidirectional search
@@ -299,10 +316,16 @@ class Nodeg2 {
 		GN2 gnk = moves[k];
 		// The block prevents a solution here also
 		// if ( Grid2.midpointy + 2 <= gnk.y ) continue; // fails
+		String val = Grid2.visited.get(gnk);
+		// if ( null != val && val.equals("+") ) continue;
 		String direction = Grid2.locations.get(gnk);
 		if ( null == direction ) { // not visited
-		    if ( block(gnk, moveForward) ) continue;
+		    if ( block(gnk, moveForward) ) { // ????? 	Grid2.visited.put(gnk, "+")
+			Grid2.visited.put(gnk, "+"); // no repeated exploration
+			continue;
+		    }
 		    // System.out.println("move f GO DEEPER " + gnk.id);
+		    Grid2.visited.put(gnk, "+"); // to prevent repeated exploration
 		    Grid2.locations.put(gnk, "+");
 		    Grid2.fCnt++;
 		    gnk.pos = Grid2.fCnt;
@@ -312,8 +335,6 @@ class Nodeg2 {
 		    gnk.visited = "+"; 
 		    Grid2.fPathLng++;
 		    (new Nodeg2(gnk, bs)).move();
-		    // System.out.println("move f back from recursion " + Grid2.depth);
-		    // Grid2.show();
 		    // /*
 		    if ( Grid2.done ) { 
 			Grid2.depth--;
@@ -321,7 +342,7 @@ class Nodeg2 {
 		    }
 		    // */
 		    // 
-		    // /*  do (NOT) restore
+		    /*  do (NOT) restore
 		    Grid2.locations.remove(gnk);
 		    gnk.pos = 0;
 		    gnk.parent = null;
@@ -331,6 +352,7 @@ class Nodeg2 {
 		    Grid2.fPathLng--;
 		    // */
 		    // Grid2.show();
+
 		    continue;
 		}
 		if ( direction.equals("+") ) continue; // visited earlier
@@ -340,11 +362,12 @@ class Nodeg2 {
 		    System.out.println("Grid2.moveCnt " + Grid2.moveCnt);
 		    System.out.println("f id " + gn.id + " pos " + gn.pos);
 		    System.out.println("f id " + gnk.id + " pos " + gnk.pos);
-		    Grid2.show(); 
-		    Grid2.showd(); 
+		*/
+		    // Grid2.show(); 
+		    // Grid2.showd(); 
 		    // */
 		    Grid2.solutionCnt++;
-		    { Grid2.done = true; break; } // terminate with 1 solution
+		    // { Grid2.done = true; break; } // terminate with 1 solution
 		    /*
 		    System.out.println("----------- moveCnt " + Grid2.moveCnt);
 		    System.out.println("move f FOUND SOLUTION # " + Grid2.solutionCnt);
@@ -374,11 +397,16 @@ class Nodeg2 {
 		// The block prevents a solution here also
 		// if ( gnk.y <= Grid2.midpointy - 2 ) continue; // block
 		// System.out.println("move b k gnk " + k + " " + gnk.id);
+		String val = Grid2.visited.get(gnk);
+		// if ( null != val && val.equals("-") ) continue;
 		String direction = Grid2.locations.get(gnk);
-		// System.out.println("move AAA direction " + direction);
 		if ( null == direction ) { // not visited
-		    if ( block(gnk, moveForward) ) continue;
+		    if ( block(gnk, moveForward) ) {
+			Grid2.visited.put(gnk, "-"); // no repeated exploration
+			continue;
+		    }
 		    // System.out.println("move f GO DEEPER " + gnk.id);
+		    Grid2.visited.put(gnk, "-"); // to prevent repeated exploration
 		    Grid2.locations.put(gnk, "-");
 		    Grid2.bCnt++;
 		    gnk.pos = Grid2.bCnt;
@@ -398,7 +426,7 @@ class Nodeg2 {
 
 		    // */
 		    // 
-		    // /* do (NOT) restore
+		    /* do (NOT) restore
 		    Grid2.locations.remove(gnk);
 		    gnk.pos = 0;
 		    gnk.parent = null;
@@ -417,11 +445,12 @@ class Nodeg2 {
 		    System.out.println("Grid2.moveCnt " + Grid2.moveCnt);
 		    System.out.println("b id " + gn.id + " pos " + gn.pos);
 		    System.out.println("b id " + gnk.id + " pos " + gnk.pos);
-		    Grid2.show(); 
-		    Grid2.showd(); 
+		    */
+		    // Grid2.show(); 
+		    // Grid2.showd(); 
 		    // */
 		    Grid2.solutionCnt++;
-		    { Grid2.done = true; break; } // terminate with 1 solution
+		    // { Grid2.done = true; break; } // terminate with 1 solution
 		    /*
 		    System.out.println("------------------------" );
 		    System.out.println("move b FOUND SOLUTION # " + Grid2.solutionCnt);
@@ -446,12 +475,14 @@ class Nodeg2 {
 		    // return;
 	    } // end for loop
 	}
+
 	// System.out.println("move BACKTRACK gn " + gn.id + " depth " + Grid2.depth
 	//	     + (moveForward ? " f" : " b") );
 	Grid2.depth--;
 	// System.out.println("move BACKTRACK gn " + gn.id + " depth " + Grid2.depth);
 	// 	Grid2.show();
 	// return;
+
     } // end move
 
     // Check whether to block a move to gnk

@@ -116,7 +116,10 @@ public class GridT {
 	GNT goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
 	goalState.direction = -1; goalState.pos = 1;
 	goalState.visited = "-"; locations.put(goalState, "-"); 
-	showg(startState); showg(goalState); 
+	System.out.println(
+			   " lx " + lx +
+			   " ly " + ly);
+	// showg(startState); showg(goalState); 
 	// System.exit(0);
 	NodegT initNode = new NodegT(startState, goalState);
 	long startTime = System.currentTimeMillis();
@@ -219,9 +222,9 @@ class NodegT {
 	// */
 	// findMoves sets numMoves and puts in moves candidate moves
 	// both directions eased
-	if ( moveForward ) GridT.findMoves(fs, 1); else GridT.findMoves(bs, -1);
+	// if ( moveForward ) GridT.findMoves(fs, 1); else GridT.findMoves(bs, -1);
 	// both directions hamperd
-	// if ( moveForward ) GridT.findMoves(fs, 2); else GridT.findMoves(bs, -2);
+	if ( moveForward ) GridT.findMoves(fs, 2); else GridT.findMoves(bs, -2);
     }
     public void move() {
 	if ( GridT.done) return;
@@ -258,7 +261,7 @@ class NodegT {
 			return;
 		    }
 		    // GridT.locations.remove(gnk);
-		    /*  do (NOT) restore
+		    // /*  do (NOT) restore
 		    gnk.pos = 0;
 		    gnk.parent = null;
 		    gnk.direction = 0;
@@ -330,7 +333,7 @@ class NodegT {
 			return;
 		    }
 		    // GridT.locations.remove(gnk);
-		    /*  do (NOT) restore
+		    // /*  do (NOT) restore
 		    gnk.pos = 0;
 		    gnk.parent = null;
 		    gnk.direction = 0;

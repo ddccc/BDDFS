@@ -28,7 +28,7 @@ public class Grid2BF {
     static Random random = new Random(777); // repeatable results
     // static final int lx = 5; 
     // static final int lx = 6; 
-    // static final int lx = 10; 
+    static final int lx = 10; 
     // static final int lx = 15; 
     // static final int lx = 20; 
     // static final int lx = 30; 
@@ -38,7 +38,7 @@ public class Grid2BF {
     // static final int lx = 70; 
     // static final int lx = 80; 
     // static final int lx = 90; 
-    static final int lx = 100; 
+    // static final int lx = 100; 
     // static final int lx = 200; 
 
     // static final int ly = 10; 

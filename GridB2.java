@@ -1,6 +1,8 @@
-// File: c:/ddc/Java/Knight/GridB.java
-// Date: Thu Sep 22 19:54:19 2022, Sat Nov 12 21:04:16 2022
+// File: c:/ddc/Java/Knight/GridB2.java
+// Date: Sun Aug 24 11:37:21 2025
 // (C) OntoOO/ Dennis de Champeaux
+import java.io.*;
+import java.util.*;
 
 /*
   This code is parametrized regarding::
@@ -11,18 +13,11 @@
      Hampering or easing the successor operations/nodes
         (hampering is adding moves in the wrong direction)
      Restore or not the search space after a recursive call
-*/
-
-
-
-import java.io.*;
-import java.util.*;
-
-/*  Two stack variant 
-     This version uses the Grid4 version of the algorithm.
+ */
+/*  Two stack variant - sequential
+    This version uses the Grid4 & GridBt version of the algorithm.
 
 */
-
 /*
 Y
          North
@@ -30,7 +25,7 @@ Y
          South  
 0-0                  X
  */
-public class GridB {
+public class GridB2 {
     // static Date date = new Date();
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
@@ -69,7 +64,6 @@ public class GridB {
     // static final int ly = 400;
     // static final int ly = 800;
     // static final int ly = 1600;
-    // static final int ly = 1800;
     static final int ly = 2000;
     // static final int ly = 3200;
     // static final int ly = 6400;
@@ -90,12 +84,6 @@ public class GridB {
     // static int fdepth = 0;
     // static int bdepth = 0;
 
-    // /*
-    static int bx = ly/3;
-    static int barrier1 = bx - 1;
-    static int barrier2 = ly - bx;
-    // */
-
     // select one
     static boolean bidirection = true;
     // static boolean bidirection = false;
@@ -105,19 +93,21 @@ public class GridB {
     static boolean donef = false; 
     static boolean doneb = ( !bidirection ? true : false ); 
 
-    static Stack<SItemB> fStack = new Stack<SItemB>();
-    static Stack<SItemB> bStack = new Stack<SItemB>();
+    static Stack<SItemB2> fStack = new Stack<SItemB2>();
+    static Stack<SItemB2> bStack = new Stack<SItemB2>();
     static boolean flip = true;
 
 
     public static void main(String[] args) {
-	if ( !GridB.bidirection ) doneb = true;
+	if ( !GridB2.bidirection ) doneb = true;
 	System.out.println("bidirection " + bidirection +
 			   " lx " + lx +
 			   " ly " + ly); //  + " barrier1 " + barrier1 + 
 	                                 // " barrier2 " + barrier2);
+
 	for ( int i = 0; i < lx; i++ )
 	    for ( int j = 0; j < ly; j++ ) grid[i][j] = new GNB2();
+	// <<<
 	for ( int i = 0; i < lx; i++ ) {
 	    if ( 0 == i ) {
 		for ( int j = 0; j < ly; j++ ) {
@@ -149,20 +139,7 @@ public class GridB {
 		}	
 	    }
 	}
-	///*
-	// make barriers
-	for ( int k = 0; k < lx-1; k++ ) {
-	    grid[k][barrier1].south = null; 
-	    grid[k][barrier1-1].north = null; 
-	}
-	// grid[lx-1][barrier1].east = null;
-
-	for ( int k = 1; k < lx; k++ ) {
-	    grid[k][barrier2].north = null; 
-	    grid[k][barrier2+1].south = null; 
-	}
-	// grid[0][barrier2].west = null;
-
+	// >>>
 	for ( int i = 0; i < lx; i++ ) 
 	    for ( int j = 0; j < ly; j++ ) {
 		GNB2 gnij = grid[i][j];
@@ -170,177 +147,160 @@ public class GridB {
 		gnij.id = i + "-" + j;
 		findMoves(gnij, 0);
 	    }
-	// */
-	/*
-	// check the new barriers
-	for ( int k = 0; k < lx; k++ ) {
-	    System.out.print(k + " ");
-	    GNB2 gnj = grid[k][barrier2]; // or barrier1
-	    System.out.print("north " + gnj.north);
-	    System.out.println(" south " + gnj.south);
-	    System.out.print(" west " + gnj.west);
-	    System.out.println(" east " + gnj.east);
-	    System.out.println();
-	}
-	// */
-	/*
-	int x = barrier1; int y = barrier1-1; 
-	System.out.print("barrier1 " +  barrier1 + " " + (barrier1-1) +
-			 " barrier2 " +  barrier2 + " " + (barrier2+1));
-	System.out.println();
-	*/
-
 
 	GNB2 startState = grid[0][0]; startState.fPathLng = 0; 
 	startState.direction = 1; startState.pos = 1; startState.visited = "+";
-	GridB.locations.put(startState, "+");
+	GridB2.locations.put(startState, "+");
 	GNB2 goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
 	// GNB2 goalState = grid[0][ly-1]; goalState.bPathLng = 0;
 	goalState.direction = -1; goalState.pos = 1; goalState.visited = "-";
-	GridB.locations.put(goalState, "-");
-	showg(startState); showg(goalState); 
+	GridB2.locations.put(goalState, "-");
+	// showg(startState); showg(goalState); 
 	System.out.println("---");
 	// showd(); showv(); 
 	// System.exit(0);
 
 	// create 2 Sitems
-	SItemB startItem = new SItemB(startState, true);
-	GridB.fStack.push(startItem);
-	SItemB goalItem = new SItemB(goalState, false);
-	GridB.bStack.push(goalItem);
+	SItemB2 startItem = new SItemB2(startState, true);
+	GridB2.fStack.push(startItem);
+	SItemB2 goalItem = new SItemB2(goalState, false);
+	GridB2.bStack.push(goalItem);
 
 	long startTime = System.currentTimeMillis();
 
 	while ( !donef || !doneb ) { // execution loop
-	    GridB.moveCnt++;
-	    // System.out.println("moveCnt " + GridB.moveCnt);
-	    // if ( 5000 < GridB.solutionCnt ) { 
-	    //    donef = true; doneb = true; continue; }
-	    if ( GridB.bidirection ) // select bi or uni direction
-	     	   GridB.flip = !GridB.flip;
-	    // System.out.println("moveCnt " + GridB.moveCnt);
-	    // System.out.println("move direction " + GridB.flip);
-	    // GridB.show(); GridB.showd();  // GridB.showv();
+	    GridB2.moveCnt++;
+	    if ( GridB2.bidirection ) // select bi or uni direction
+	     	   GridB2.flip = !GridB2.flip;
+	    boolean moveForward = GridB2.flip;
+	    // System.out.println("moveCnt " + GridB2.moveCnt);
+	    // System.out.println("move direction " + GridB2.flip);
+	    // GridB2.show(); GridB2.showd();  // GridB2.showv();
 
-	    if ( GridB.flip ) { // forward
-		if ( GridB.fStack.isEmpty() ) { donef = true; continue; }
-		SItemB fItem = GridB.fStack.peek();
+	    if ( GridB2.flip ) { // forward
+		if ( GridB2.fStack.isEmpty() ) { donef = true; continue; }
+		SItemB2 fItem = GridB2.fStack.peek();
 		GNB2 gn = fItem.gn;
 		int fNumMoves = fItem.numMoves;
 		int fNumExplored = fItem.numExplored;
 		// fItem.show();
-		boolean found = false;
 		GNB2 gnk = null;
 		while ( fNumExplored < fNumMoves ) {
-		    gnk = fItem.moves[fNumExplored];  
+		    GNB2 gnkx = fItem.moves[fNumExplored];  
 		    fItem.numExplored++; fNumExplored++;
-		    if ( 1 == gnk.direction ) continue;
-		    found = true;
+		    // if ( block(gnkx, moveForward) ) { continue; }
+		    if ( 1 == gnkx.direction ) continue;
+		    gnk = gnkx;
 		    break;
 		}
-		if ( !found ) {
+		if ( null == gnk ) {
 		    /* Do (NOT) restore:
-		    GridB.fCnt--;
+		    GridB2.fCnt--;
 		    gn.pos = 0;
 		    gn.parent = null;
 		    gn.direction = 0;
 		    gn.visited = " ";
 		    // */
-		    GridB.fStack.pop();
-		    if ( GridB.fStack.isEmpty() ) { donef = true; continue; }
-		    // fItem = GridB.fStack.peek();
+		    GridB2.fStack.pop();
+		    if ( GridB2.fStack.isEmpty() ) { donef = true; continue; }
+		    // fItem = GridB2.fStack.peek();
 		    // fItem.backTrack = gn;
-		    // GridB.showd(); 
+		    // GridB2.showd(); 
 		    continue;
 		}
-		String direction = GridB.locations.get(gnk);
+		String direction = GridB2.locations.get(gnk);
 		if ( null == direction ) {
+		    if ( block(gnk, true) ) {
+			continue;
+		    }
 		    // go down and continue
-		    GridB.locations.put(gnk, "+");
-		    GridB.fCnt++;
-		    gnk.pos = GridB.fCnt;
+		    GridB2.locations.put(gnk, "+");
+		    GridB2.fCnt++;
+		    gnk.pos = GridB2.fCnt;
 		    // gnk.fPathLng = gn.fPathLng+1;
 		    gnk.direction = 1;
 		    gnk.parent = gn;
 		    gnk.visited = "+";
-		    // GridB.fPathLng++;
-		    SItemB sgnk = new SItemB(gnk, true);
-		    GridB.fStack.push(sgnk);
+		    // GridB2.fPathLng++;
+		    SItemB2 sgnk = new SItemB2(gnk, true);
+		    GridB2.fStack.push(sgnk);
 		    continue;
 		}
 		if ( direction.equals("+") ) continue; // visited earlier
 		// direction.equals("-")
 		// a solution
-		// GridB.show(); 
-		// GridB.showd(); 
-		GridB.solutionCnt++;
+		// GridB2.show(); 
+		// GridB2.showd(); 
+		GridB2.solutionCnt++;
 		{ donef = true; doneb = true; } // for termination
 		/*
 		  show here 		      
 		*/
-		GridB.fStack.pop(); // backtrack
-		if ( GridB.fStack.isEmpty() ) { donef = true; continue; }
+		GridB2.fStack.pop(); // backtrack
+		if ( GridB2.fStack.isEmpty() ) { donef = true; continue; }
 		continue;
 	    } else { // backward
-		if ( GridB.bStack.isEmpty() ) { doneb = true; continue; }
-		SItemB bItem = GridB.bStack.peek();
+		if ( GridB2.bStack.isEmpty() ) { doneb = true; continue; }
+		SItemB2 bItem = GridB2.bStack.peek();
 		GNB2 gn = bItem.gn;
 		int bNumMoves = bItem.numMoves;
 		int bNumExplored = bItem.numExplored;
 		// bItem.show();
-		boolean found = false;
 		GNB2 gnk = null;
 		while ( bNumExplored < bNumMoves ) {
-		    gnk = bItem.moves[bNumExplored];  
+		    GNB2 gnkx = bItem.moves[bNumExplored];  
 		    bItem.numExplored++; bNumExplored++;
-		    if ( -1 == gnk.direction ) continue;
-		    found = true;
+		    // if ( block(gnkx, moveForward) ) { continue; }
+		    if ( -1 == gnkx.direction ) continue;
+		    gnk = gnkx;
 		    break;
 		}
-		if ( !found ) {
+		if ( null == gnk ) {
 		    /* Do (NOT) restore:
-		    GridB.bCnt--;
+		    GridB2.bCnt--;
 		    gn.pos = 0;
 		    gn.parent = null;
 		    gn.direction = 0;
 		    gn.visited = " ";
 		    // */
-		    GridB.bStack.pop();
-		    if ( GridB.bStack.isEmpty() ) { doneb = true; continue; }
-		    // bItem = GridB.bStack.peek();
+		    GridB2.bStack.pop();
+		    if ( GridB2.bStack.isEmpty() ) { doneb = true; continue; }
+		    // bItem = GridB2.bStack.peek();
 		    // bItem.backTrack = gn;
-		    // GridB.showd(); 
+		    // GridB2.showd(); 
 		    continue;
 		}
-		String direction = GridB.locations.get(gnk);
+		String direction = GridB2.locations.get(gnk);
 		if ( null == direction ) {
+		    if ( block(gnk, false) ) {
+			continue;
+		    }
 		    // go down and continue
-		    GridB.locations.put(gnk, "-");
-		    GridB.bCnt++;
-		    gnk.pos = GridB.bCnt;
+		    GridB2.locations.put(gnk, "-");
+		    GridB2.bCnt++;
+		    gnk.pos = GridB2.bCnt;
 		    // gnk.bPathLng = gn.bPathLng+1;
 		    gnk.direction = -1;
 		    gnk.parent = gn;
 		    gnk.visited = "-";
-		    // GridB.fPathLng++;
-		    SItemB sgnk = new SItemB(gnk, false);
-		    GridB.bStack.push(sgnk);
+		    // GridB2.fPathLng++;
+		    SItemB2 sgnk = new SItemB2(gnk, false);
+		    GridB2.bStack.push(sgnk);
 		    continue;
 		}
 		if ( direction.equals("-") ) continue; // visited earlier
 		// direction.equals("+")
 		// a solution
-		// GridB.show(); 
-		// GridB.showd(); 
-		GridB.solutionCnt++;
+		// GridB2.show(); 
+		// GridB2.showd(); 
+		GridB2.solutionCnt++;
 		{ donef = true; doneb = true; } // for termination
 		/*
 		  show here 		      
 		*/
-		GridB.bStack.pop(); // backtrack
-		if ( GridB.bStack.isEmpty() ) { donef = true; continue; }
+		GridB2.bStack.pop(); // backtrack
+		if ( GridB2.bStack.isEmpty() ) { donef = true; continue; }
 		continue;
-		
 	    }
 	} // end while
 
@@ -350,17 +310,27 @@ public class GridB {
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
 	/*
-	// show();
 	System.out.println();
 	show();  // pos numbers	
 	showd(); // f & b
 	showv(); // + & -
-	// System.out.println("\nGridB.fCnt " + GridB.fCnt + 
-	//	   " GridB.bCnt " + GridB.bCnt);
+	// System.out.println("\nGridB2.fCnt " + GridB2.fCnt + 
+	//	   " GridB2.bCnt " + GridB2.bCnt);
 	// */
 
     } // end main
 
+    static boolean block(GNB2 gnk, boolean forward) {
+	GNB2 [] gnkMoves = gnk.getMoves();
+	int numMoves = gnk.numMoves;
+	for (int k = 0; k < numMoves; k++) {
+	    GNB2 gnbk = gnkMoves[k];
+	    if ( 0 == gnbk.pos ) return false; // found a move
+	    if ( (forward && gnbk.direction == -1) ||
+		 (!forward && gnbk.direction == 1)) return false; // found a solution
+	}
+	return true; // block the move
+    } // end block
 
     static public void show1(int i, int j) {
 	// System.out.println("i j " + i + " " + j + " " + grid[i][j].id);
@@ -458,34 +428,34 @@ public class GridB {
 	}
     } // end scramble()
     // */
-} // end GridB
+} // end GridB2
 
-class SItemB {
+class SItemB2 {
     protected GNB2 gn;
     protected boolean moveForward = false;
     protected int numMoves = 0;
     protected GNB2 [] moves = new GNB2[4];
     protected int numExplored = 0;
     // protected boolean backTrack = false;
-    SItemB(GNB2 gnx, boolean b) {
+    SItemB2(GNB2 gnx, boolean b) {
 	gn = gnx; moveForward = b;
 	// sets moves & nummoves 
 	// forward and backward easied:
-	// if ( moveForward ) GridB.findMoves(gn, 1); else GridB.findMoves(gn, -1);
+	// if ( moveForward ) GridB2.findMoves(gn, 1); else GridB2.findMoves(gn, -1);
 	// forward hampered and backward easied:
-	// if ( moveForward ) GridB.findMoves(gn, 2); else GridB.findMoves(gn, -1);
+	// if ( moveForward ) GridB2.findMoves(gn, 2); else GridB2.findMoves(gn, -1);
 	// forward and backward hampered:
-	if ( moveForward ) GridB.findMoves(gn, 2); else GridB.findMoves(gn, -2);
+	if ( moveForward ) GridB2.findMoves(gn, 2); else GridB2.findMoves(gn, -2);
 	numMoves = gn.numMoves;
 	moves = gn.moves;
     }
     /*
     public void show() { 
-	System.out.println("SItemB moveForward " +  moveForward);
+	System.out.println("SItemB2 moveForward " +  moveForward);
 	System.out.println("numMoves " + numMoves + " numExplored " + numExplored);
     }
     */
-} // end SItemB
+} // end SItemB2
 
 class GNB2 {
     protected int x = 0;

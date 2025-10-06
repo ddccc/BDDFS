@@ -33,17 +33,19 @@ public class Grid4 {
     // static final int lx = 6; 
     // static final int lx = 10; 
     // static final int lx = 15; 
-    static final int lx = 20; 
+    // static final int lx = 20; 
     // static final int lx = 25; 
     // static final int lx = 30; 
     // static final int lx = 35; 
     // static final int lx = 40; 
     // static final int lx = 50; 
+    // static final int lx = 60; 
     // static final int lx = 80; 
     // static final int lx = 100; 
     // static final int lx = 120; 
     // static final int lx = 140; 
     // static final int lx = 200; 
+    static final int lx = 600; 
 
     // static final int ly = lx;
 
@@ -325,9 +327,9 @@ class Nodeg4 {
 
 	// findMoves sets numMoves and puts in moves candidate moves
 	// both directions easied
-	if ( moveForward ) Grid4.findMoves(fs, 1); else Grid4.findMoves(bs, -1);
+	// if ( moveForward ) Grid4.findMoves(fs, 1); else Grid4.findMoves(bs, -1);
 	// both directions hampered
-	// if ( moveForward ) Grid4.findMoves(fs, 2); else Grid4.findMoves(bs, -2);
+	if ( moveForward ) Grid4.findMoves(fs, 2); else Grid4.findMoves(bs, -2);
     }
     public void move() {
 	if ( Grid4.done ) {
@@ -394,7 +396,7 @@ class Nodeg4 {
 			Grid4.depth--;
 			return;
 		    }
-		    // do (NOT) restore
+		    /* do (NOT) restore
 		    Grid4.locations.remove(gnk);
 		    gnk.pos = 0;
 		    gnk.parent = null;
@@ -478,7 +480,7 @@ class Nodeg4 {
 			return;
 		    }
 
-		    // do (NOT) restore
+		    /* // do (NOT) restore
 		    Grid4.locations.remove(gnk);
 		    gnk.pos = 0;
 		    gnk.parent = null;

@@ -25,7 +25,7 @@ public class Grab {
     // static Date date = new Date();
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
-    // static final int lx = 6; 
+     static final int lx = 6; 
     // static final int lx = 10; 
     // static final int lx = 20; 
     // static final int lx = 30; 
@@ -35,7 +35,7 @@ public class Grab {
     // static final int lx = 70; 
     // static final int lx = 80; 
     // static final int lx = 90; 
-    static final int lx = 100; 
+    // static final int lx = 100; 
     // static final int lx = 200; 
     // static final int lx = 300; 
     // static final int lx = 400; 
@@ -43,6 +43,8 @@ public class Grab {
     // static final int lx = 600;
  
     // static final int ly = 12; 
+    // static final int ly = 25; 
+    // static final int ly = 26; 
     // static final int ly = 45; 
     // static final int ly = 50; 
     // static final int ly = 55; 
@@ -52,10 +54,10 @@ public class Grab {
     // static final int ly = 75; 
     // static final int ly = 80; 
     // static final int ly = 85; 
-    //static final int ly = 90; 
+    // static final int ly = 90; 
     // static final int ly = 95; 
-    // static final int ly = 100; 
-    static final int ly = 2000; 
+    static final int ly = 100; 
+    // static final int ly = 2000; 
 
     static GNB [][] grid = new GNB[lx][ly];
     static int moveCnt = 0; 
@@ -115,6 +117,7 @@ public class Grab {
 		gnij.id = i + "-" + j;
 		findMoves(gnij, 0);
 	    }
+	System.out.println("lx " + lx + " ly " + ly);
 	GNB startState = grid[0][0]; 
 	startState.direction = 1;
 	startState.pos = 1;
@@ -123,7 +126,7 @@ public class Grab {
 	goalState.direction = -1;
 	goalState.pos = 1;
 	locations.put(goalState, "-");
-	showg(startState); showg(goalState); 
+	// showg(startState); showg(goalState); 
 	// showd();
 	// System.exit(0);
 	Nodeb initNode = new Nodeb(startState, goalState);
@@ -221,24 +224,26 @@ class Nodeb {
 	if (Grab.done) return;
 	Grab.depth++;
 	// Select one of the next three
-        moveForward = true; // unidirectional search
+        // moveForward = true; // unidirectional search
 	// moveForward = false; // unidirectional search
 	// bidirectional search
-	/*
+	// /*
 	if ( Grab.moveBidirection ) Grab.moveForward = !Grab.moveForward; else
 	    Grab.moveForward = true; // or set to false
 	moveForward = Grab.moveForward;
 	// */
-	/*
-	    System.out.println("moveForward " + moveForward + 
-			       " moveCnt " + Grab.moveCnt);
-	    // System.exit(0);
+	// /*
+	// System.out.println("moveForward " + moveForward + 
+	//	       " moveCnt " + Grab.moveCnt);
+	    // Grab.show();
+	    // if (  3900 <  Grab.moveCnt )
+	    //       System.exit(0);
 	// */
 	// findMoves sets numMoves and puts in moves candidate moves
 	// both not hampered
-	if ( moveForward ) Grab.findMoves(fs, 1); else Grab.findMoves(bs, -1);
+	// if ( moveForward ) Grab.findMoves(fs, 1); else Grab.findMoves(bs, -1);
 	// both hampered
-	// if ( moveForward ) Grab.findMoves(fs, 2); else Grab.findMoves(bs, -2);
+	if ( moveForward ) Grab.findMoves(fs, 2); else Grab.findMoves(bs, -2);
 
 	gn = ( moveForward ? fs : bs );
 	numMoves = gn.getNumMoves();
@@ -255,9 +260,9 @@ class Nodeb {
 			Grab.solutionCnt++;
 			// Grab.show(); 
 			// Grab.showd();
-			// { Grab.done = true; return; } // terminate with one
+			{ Grab.done = true; return; } // terminate with one
 			// System.exit(0)
-			continue; // more than 1 solution;
+			// continue; // more than 1 solution;
 		    }
 		    if ( null != direction && direction.equals("+") ) {
 			continue;
@@ -274,7 +279,7 @@ class Nodeb {
 		    gnk.pos = Grab.fCnt;
 		    (new Nodeb(gnk, bs)).move();
 		    if ( Grab.done ) return;
-		    /* restore (or not)
+		    // /* restore (or not)
 		    Grab.locations.remove(gnk);
 		    gnk.pos = 0;
 		    gnk.direction = 0;
@@ -296,7 +301,7 @@ class Nodeb {
 		gnk.pos = Grab.fCnt;
 		(new Nodeb(gnk, bs)).move();
 		if ( Grab.done ) return;
-		/* restore (or not)
+		// /* restore (or not)
 		  Grab.locations.remove(gnk);
 		  gnk.pos = 0;
 		  gnk.direction = 0;
@@ -314,9 +319,9 @@ class Nodeb {
 			// Grab.show(); 
 			// Grab.showd(); 
 			// System.out.println("RRR");
-			// { Grab.done = true; return; } // terminate with one
+			{ Grab.done = true; return; } // terminate with one
 			// System.exit(0);
-			continue; // more than 1 solution
+			// continue; // more than 1 solution
 		    }
 		    if ( null != direction && direction.equals("-") ) continue;
 		    if ( gnk.y < Grab.bLevel ) continue; // because ...
@@ -330,7 +335,7 @@ class Nodeb {
 		    gnk.pos = Grab.bCnt;
 		    (new Nodeb(fs, gnk)).move();
 		    if ( Grab.done ) return;
-		    /* restore (or not)
+		    // /* restore (or not)
 		      Grab.locations.remove(gnk);
 		      gnk.pos = 0;
 		      gnk.direction = 0;
@@ -350,7 +355,7 @@ class Nodeb {
 		gnk.pos = Grab.bCnt;
 		(new Nodeb(fs, gnk)).move();
 		if ( Grab.done ) return;
-		/*  restore (or not)
+		// /*  restore (or not)
 		  Grab.locations.remove(gnk);
 		  gnk.pos = 0;
 		  gnk.direction = 0;

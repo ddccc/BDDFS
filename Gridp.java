@@ -44,7 +44,13 @@ public class Gridp {
     // static final int lx = 700;
     // static final int lx = 800;
     // static final int lx = 900;
-    static final int lx = 1000;
+    // static final int lx = 1000;
+    // static final int lx = 1200;
+    // static final int lx = 1400;
+    // static final int lx = 1600;
+    // static final int lx = 1800;
+    static final int lx = 2000;
+
     static final int ly = 2000;
 
     // static final int lx = 400;   
@@ -141,8 +147,8 @@ public class Gridp {
 	GNP goalState = grid[lx-1][ly-1]; goalState.bPathLng = 0;
 	// GNP goalState = grid[0][ly-1]; goalState.bPathLng = 0;
 	goalState.direction = -1; goalState.pos = 1; goalState.visited = "-";
-	showg(startState); showg(goalState); 
-	System.out.println();
+	// showg(startState); showg(goalState); 
+	// System.out.println();
 	// System.exit(0);
 	// boolean forwardRunDone = false;
 	// boolean backwardRunDone = false;
@@ -176,17 +182,19 @@ public class Gridp {
 	System.out.println("\ntiming " + (endTime-startTime));
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
+	// show();
+
 	// /*
 	/*
-	show();
-	showd();
-	showv();
+	  show();
+	  showd();
+	  showv();
+	  System.out.println("Gridp.fCnt " + Gridp.fCnt + 
+	                     " Gridp.bCnt " + Gridp.bCnt);
 	// */
 	// show();
 	// showd();
 
-	System.out.println("Gridp.fCnt " + Gridp.fCnt + 
-			   " Gridp.bCnt " + Gridp.bCnt);
 
     } // end main
 
@@ -368,7 +376,7 @@ class Nodegp {
 		  // Gridp.closef();
 		  System.exit(0);
 		  // */
-		synchronized(Gridp.os) { Gridp.solutionCnt++; }
+		synchronized(gnk) { Gridp.solutionCnt++; }
 		Gridp.done = true; // terminate when a solution is found
 		/*
 		  System.out.println("----------- moveCnt " + Gridp.moveCnt);
@@ -396,7 +404,7 @@ class Nodegp {
 	    if ( 0 == gnk.direction ) { // can go there
 		 // block check here
 		 if ( block(gnk, moveForward) ) continue;
-		 synchronized(gnk) {
+		 // synchronized(gnk) {
 		    // System.out.println("move f GO DEEPER " + gnk.id);
 		    if ( moveForward ) {
 			Gridp.fCnt++; Gridp.locations.put(gnk, "+");
@@ -409,7 +417,7 @@ class Nodegp {
 		    gnk.parent = gn;
 		    gnk.visited = ( moveForward ? "+" : "-" );
 		    // Gridp.fPathLng++;
-		}
+		    // }
 		(new Nodegp( moveForward, gnk)).move(gnk);
 		if ( Gridp.done ) return;
 		/* // do (NOT) restore

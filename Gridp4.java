@@ -27,14 +27,23 @@ public class Gridp4 {
     // static Date date = new Date();
     // static Random random = new Random(date.getTime());
     static Random random = new Random(777); // repeatable results
-    // static final int lx = 5; 
-    // static final int ly = 10;
 
-    static final int lx = 6; 
-    static final int ly = 12;
+    // static final int lx = 6; 
+    // static final int ly = 10;
+    // static final int ly = 12;
+    // static final int ly = 25;
     // static final int ly = 30;
 
+    // static final int lx = 5; 
+    static final int lx = 10;
     // static final int lx = 15;
+    // static final int lx = 20;
+    // static final int lx = 40;
+    // static final int lx = 60;
+    // static final int lx = 80;
+    // static final int lx = 100;
+    // static final int lx = 600;
+
     // static final int ly = lx;
     // static final int lx = 100;   
     // static final int lx = 200;
@@ -46,10 +55,10 @@ public class Gridp4 {
     // static final int lx = 800;
     // static final int lx = 900;
     // static final int lx = 1000;
-    // static final int ly = 2000;
 
-    // static final int lx = 400;   
-    // static final int ly = 400;
+    // static final int ly = 1600;
+    // static final int ly = 1800;
+    static final int ly = 2000;
 
 
     static GNP4 [][] grid = new GNP4[lx][ly];
@@ -173,7 +182,7 @@ public class Gridp4 {
 	backward.start();
 	try { // wait for them to terminate
 	    forward.join();
-	    // backward.join();
+	    backward.join();
 	} catch (InterruptedException e) {}
 	
 	long endTime = System.currentTimeMillis();
@@ -181,7 +190,7 @@ public class Gridp4 {
 	System.out.println("solutionCnt " + solutionCnt);
 	System.out.println("moveCnt " + moveCnt);
 
-	// /*
+	/*
 	show();
 	showd();
 	showv();
@@ -352,6 +361,10 @@ class Nodegp4 {
 	    if (trace) System.out.println("gnk.id " + gnk.id);
 	    if (trace) System.out.println("gnk.direction " + gnk.direction);
 	    if (trace) System.out.println("gnk.pos " + gnk.pos);
+	    /* See Gridp5 for using the hash-table locations (not available in 
+	       this version) for recognizing a solution.  It finds grid locs that 
+	       were restored to empty after a backtrack (when restoration is 
+	       activated). */
 	    if ( ( moveForward && -1 == gnk.direction ) ||
 		 ( !moveForward && 1 == gnk.direction ) ) { // a solution
 		// System.out.println("SOLUTION " + 
@@ -407,7 +420,7 @@ class Nodegp4 {
 		}
 		(new Nodegp4(moveForward, gnk)).move(gnk);
 		if ( Gridp4.done ) return;
-		/* // do (NOT) restore
+		// do (NOT) restore
 		   gnk.pos = 0;
 		   gnk.parent = null;
 		   gnk.direction = 0;

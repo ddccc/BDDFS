@@ -281,7 +281,7 @@ public class Gridpp {
 		    break;
 		}
 		if ( !found ) {
-		    /* Do (NOT) restore:
+		    // /* Do (NOT) restore:
 		    Gridpp.fCnt--;
 		    gn.pos = 0;
 		    gn.parent = null;
@@ -344,7 +344,7 @@ public class Gridpp {
 		    break;
 		}
 		if ( !found ) {
-		    /* Do (NOT) restore:
+		    // /* Do (NOT) restore:
 		    Gridpp.bCnt--;
 		    gn.pos = 0;
 		    gn.parent = null;

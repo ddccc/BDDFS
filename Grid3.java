@@ -40,6 +40,7 @@ public class Grid3 {
     // static final int ly = 10;
     // static final int ly = 12;
     // static final int ly = 25;
+    // static final int ly = 35;
     // static final int ly = 45;
     // static final int ly = 50;
     // static final int ly = 55;
@@ -84,7 +85,12 @@ public class Grid3 {
     // static final int lx = 700;   
     // static final int lx = 800;   
     // static final int lx = 900;   
-    static final int lx = 1000; 
+    // static final int lx = 1000; 
+    // static final int lx = 1200; 
+    // static final int lx = 1400; 
+    // static final int lx = 1600; 
+    // static final int lx = 1800; 
+    static final int lx = 2000; 
   
     static final int ly = 2000;
 
@@ -147,7 +153,7 @@ public class Grid3 {
 	}
 	// make barrier
 	System.out.println("lx " + lx + " ly " + ly);
-	System.out.println("midpointx " + midpointx + " midpointy " + midpointy);
+	// System.out.println("midpointx " + midpointx + " midpointy " + midpointy);
 
 	for ( int k = 0; k < lx; k++ )
 	    if ( k != midpointx ) {
@@ -185,8 +191,8 @@ public class Grid3 {
 	// GN3 goalState = grid[0][ly-1]; goalState.bPathLng = 0;
 	goalState.direction = -1; goalState.pos = 1; goalState.visited = "-";
 	locations.put(goalState, "-");
-	showg(startState); showg(goalState); 
-	System.out.println();
+	// showg(startState); showg(goalState); 
+	// System.out.println();
 	// System.exit(0);	
 	Nodeg3 initNode = new Nodeg3(startState, goalState);
 	long startTime = System.currentTimeMillis();

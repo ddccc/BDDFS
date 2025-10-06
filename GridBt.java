@@ -14,7 +14,7 @@ import java.util.*;
         (hampering is adding moves in the wrong direction)
      Restore or not the search space after a recursive call
  */
-/*  Two stack variant 
+/*  Two stack variant - sequential
      This version uses the Grid4 version of the algorithm.
 
 */
@@ -167,7 +167,7 @@ public class GridBt {
 	// GNBt goalState = grid[0][ly-1]; goalState.bPathLng = 0;
 	goalState.direction = -1; goalState.pos = 1; goalState.visited = "-";
 	GridBt.locations.put(goalState, "-");
-	showg(startState); showg(goalState); 
+	// showg(startState); showg(goalState); 
 	System.out.println("---");
 	// showd(); showv(); 
 	// System.exit(0);
@@ -184,6 +184,7 @@ public class GridBt {
 	    GridBt.moveCnt++;
 	    if ( GridBt.bidirection ) // select bi or uni direction
 	     	   GridBt.flip = !GridBt.flip;
+	    boolean moveForward = GridBt.flip;
 	    // System.out.println("moveCnt " + GridBt.moveCnt);
 	    // System.out.println("move direction " + GridBt.flip);
 	    // GridBt.show(); GridBt.showd();  // GridBt.showv();
@@ -195,17 +196,17 @@ public class GridBt {
 		int fNumMoves = fItem.numMoves;
 		int fNumExplored = fItem.numExplored;
 		// fItem.show();
-		boolean found = false;
 		GNBt gnk = null;
 		while ( fNumExplored < fNumMoves ) {
-		    gnk = fItem.moves[fNumExplored];  
+		    GNBt gnkx = fItem.moves[fNumExplored];  
 		    fItem.numExplored++; fNumExplored++;
-		    if ( 1 == gnk.direction ) continue;
-		    found = true;
+		    // if ( block(gnkx, moveForward) ) { continue; }
+		    if ( 1 == gnkx.direction ) continue;
+		    gnk = gnkx;
 		    break;
 		}
-		if ( !found ) {
-		    /* Do (NOT) restore:
+		if ( null == gnk ) {
+		    // /* Do (NOT) restore:
 		    GridBt.fCnt--;
 		    gn.pos = 0;
 		    gn.parent = null;
@@ -257,17 +258,17 @@ public class GridBt {
 		int bNumMoves = bItem.numMoves;
 		int bNumExplored = bItem.numExplored;
 		// bItem.show();
-		boolean found = false;
 		GNBt gnk = null;
 		while ( bNumExplored < bNumMoves ) {
-		    gnk = bItem.moves[bNumExplored];  
+		    GNBt gnkx = bItem.moves[bNumExplored];  
 		    bItem.numExplored++; bNumExplored++;
-		    if ( -1 == gnk.direction ) continue;
-		    found = true;
+		    // if ( block(gnkx, moveForward) ) { continue; }
+		    if ( -1 == gnkx.direction ) continue;
+		    gnk = gnkx;
 		    break;
 		}
-		if ( !found ) {
-		    /* Do (NOT) restore:
+		if ( null == gnk ) {
+		    // /* Do (NOT) restore:
 		    GridBt.bCnt--;
 		    gn.pos = 0;
 		    gn.parent = null;
@@ -312,7 +313,6 @@ public class GridBt {
 		GridBt.bStack.pop(); // backtrack
 		if ( GridBt.bStack.isEmpty() ) { donef = true; continue; }
 		continue;
-		
 	    }
 	} // end while
 
@@ -453,11 +453,11 @@ class SItemB {
 	gn = gnx; moveForward = b;
 	// sets moves & nummoves 
 	// forward and backward easied:
-	if ( moveForward ) GridBt.findMoves(gn, 1); else GridBt.findMoves(gn, -1);
+	// if ( moveForward ) GridBt.findMoves(gn, 1); else GridBt.findMoves(gn, -1);
 	// forward hampered and backward easied:
 	// if ( moveForward ) GridBt.findMoves(gn, 2); else GridBt.findMoves(gn, -1);
 	// forward and backward hampered:
-	// if ( moveForward ) GridBt.findMoves(gn, 2); else GridBt.findMoves(gn, -2);
+	if ( moveForward ) GridBt.findMoves(gn, 2); else GridBt.findMoves(gn, -2);
 	numMoves = gn.numMoves;
 	moves = gn.moves;
     }

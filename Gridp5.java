@@ -375,7 +375,7 @@ class Nodegp5 {
 		if  ( moveForward ) {
 		    if  (  direction.equals("+") ) continue; }
 		else if  (  direction.equals("-") ) continue;
-				System.out.println("SOLUTION " + 
+		System.out.println("SOLUTION " + 
 				   (moveForward ? "forward" : "backward"));
 		Gridp5.endTimeG = System.currentTimeMillis();
 		/*
