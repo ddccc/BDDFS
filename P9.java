@@ -50,14 +50,14 @@ public class P9 {
 
     static public Stack<Node9> stack = new Stack<>();
     static public int cnt = 0; 
+
     // determines bi-direction or forward or backward search
-    static public int direction = -1; // -1/ 0 +1 | B / <-> / F
+    static public int direction = 0; // -1/ 0 +1 | B / <-> / F
     static public boolean theDirection = false;
-    
     static public boolean getDirection() {
 	theDirection = ( 1 == direction ? true :
 			 ( -1 == direction ? false : !theDirection )) ;
-	return 	theDirection;
+	return theDirection;
     } // end getDirection
 
     public static void main(String[] args) {
@@ -66,7 +66,13 @@ public class P9 {
 
 	System.out.println("Start");
 	// determines # random moves of zero after the init
-	Square start = new Square(8*1024, true); 
+
+	// Square start = new Square(32, true); 
+	// Square start = new Square(64, true); 
+	// Square start = new Square(128, true); 
+	// Square start = new Square(256, true); 
+	// Square start = new Square(512, true); 
+	Square start = new Square(2*1024, true); 
 	// Square start = new Square(true);
 	show(start);
 	// System.exit(0);
@@ -79,22 +85,19 @@ public class P9 {
 	show(goal);
 	// addToHashtable(goal);
 	int z = P9.direction;
+	System.out.println("z: " + z); 
 	if ( 1 == z ) addToHashtable(goal); // forward search
 	if ( -1 == z ) addToHashtable(start); //  backward search
 	if ( 0 == z ) { addToHashtable(start); addToHashtable(goal); }
-	// bidirection search
-
-	// System.exit(0);
-
-	// System.out.println("S = S ? " + start.equals(start));
-	// System.out.println("S = G ? " + start.equals(goal));
-	// System.exit(0);
+	         // bidirection search
+	// addToHashtable(start); addToHashtable(goal);
         Node9 n9 = new Node9(start, goal);
-	// n9.explore();
+	           // n9.explore();
 	P9.stack.push(n9);
-	while ( P9.cnt < 400000 ) {
+	while ( P9.cnt < 200000 ) {
+	// while ( P9.cnt < 3 ) {
 	    P9.cnt++;
-	    System.out.println("--- loop cnt: " + cnt);
+	    // System.out.println("--- loop cnt: " + cnt);
 	    if ( stack.empty() ) {
 		System.out.println("main stack.empty()"); 
 		break;
@@ -102,48 +105,9 @@ public class P9 {
 	    Node9 nx = stack.pop();
 	    nx.explore();
 	}
-
-	/*
-	Node9 fNode = new Node9(true, startState); // forward thread
-	Node9 bNode = new Node9(false, goalState); // backward thread
-
-	Thread forward = new Thread(new Runnable() {
-		public void run() { 
-		    fNode.move(fNode.state); 
-		} } );
-	Thread backward = new Thread(new Runnable() {
-		public void run() { 
-		    bNode.move(bNode.state); 
-		} } );
-	// for testing unidirectional search 
-	startTime = System.currentTimeMillis();
-	// fNode.move(fNode.state); 
-
-	// ... get the ball rolling
-	// forward.start();
-	backward.start();
-	// / *
-	try { // wait for them to terminate
-	    forward.join();
-	    backward.join();
-	} catch (InterruptedException e) {}
-	// * /
-	long endTime = System.currentTimeMillis();
-	System.out.println("\ntiming " + (endTime-startTime));
-	System.out.println("moveCnt " + moveCnt);
-	System.out.println("solutionCnt " + solutionCnt);
-	/*
-	System.out.println("solution # solutionCntF " + Knight7.solutionCntF +
-					   " backward " + Knight7.solutionCntB);
-	/*
-	show(board);
-	*/
-
     } // end main
 
 } // end of P9
-
-
 
 class Square {
       final int a = 0;  
@@ -158,6 +122,7 @@ class Square {
 
     protected int [] state = new int[] { 0,1,2,3,4,5,6,7,8 };
     protected int zeroLoc = 0;
+    protected int cnt = 0;
     protected boolean forward = true;
     protected int previousZeroLoc = -1;
     protected final int[][] moves =
@@ -215,16 +180,10 @@ class Square {
 	this.zeroLoc = j;
 	this.state[zeroOld] = k;
     }
-    /*
-    protected int[] find(Square sq) {
-	int locSq = sq.zeroLoc;
-	return moves[locSq];
-    } // find
-    */
-    protected int[] find() {
+    protected int[] findMoves() {
 	int locSq = this.zeroLoc;
 	return moves[locSq];
-    } // find
+    } // findMoves
     public boolean equals(Square sq) {
 	// if ( zeroLoc != sq.zeroLoc ) return false;
 	for (int i = 0; i < state.length; i++)
@@ -245,28 +204,43 @@ class Node9 {
 	// P9.direction = !P9.direction;
     }
     public void explore() {
-	if ( 330000 < P9.cnt  ) {
+
+
+
+
+	if ( 200000 < P9.cnt  ) {
 	// if ( 4 < P9.cnt  ) {
 	    System.out.println("P9.cnt " + P9.cnt);
+	    System.out.println("P9.cnt too large");
 	    System.exit(0);
 	}
-	// P9.show(sqS); 
 	boolean zz = P9.getDirection();
-	// System.out.println("zz " + zz);
-	// System.exit(0);
-	if ( zz )  P9.show(sqS); else P9.show(sqG); 
+	// if ( zz )  P9.show(sqS); else P9.show(sqG); 
 
 	if ( 1 == P9.direction || zz) {
-	    // System.out.println("BBBBB");
 	    Square found = P9.squaresTable.get(P9.getKey(sqS));
 	    if ( null != found ) {
 		/* System.out.println("DDDDD");
 		P9.show(found);
 		P9.show(sqS); */
 		if ( !found.forward ) {
-		    System.out.println("Found backward");
+		    System.out.println("Found backward 0");
+		    System.out.println("P9.cnt " + P9.cnt);
 		    P9.show(found);
+		    System.out.println("found.cnt: " + found.cnt);
+			System.out.println("hash size " +
+					   P9.squaresTable.size());
+		    int foundCnt = 0; Square fParent = found;
+		    while (null != fParent) {
+			foundCnt++; fParent = fParent.parent;
+		    }
+		    System.out.println("foundCnt " + foundCnt);
 		    P9.show(sqS);
+		    int sqCnt = 0; Square fParent2 = sqG;
+		    while (null != fParent2) {
+			sqCnt++; fParent2 = fParent2.parent;
+		    }
+		    System.out.println("sqGCnt " + sqCnt);
 		    System.exit(0);
 		}
 	    }
@@ -275,33 +249,36 @@ class Node9 {
 	    exploreForward();
 	} 
 	if ( -1 == P9.direction  || !zz) { 
+	    // System.out.println("DDDDD");
 	    Square found = P9.squaresTable.get(P9.getKey(sqG));
 	    if ( null != found ) {
-		if ( found.forward ) {
-		    System.out.println("Found forward");
+		if ( found.forward ) {		    
+		    System.out.println("Found forward 0");
+		    System.out.println("P9.cnt " + P9.cnt);
 		    P9.show(found);
-		    P9.show(sqS);
+		    int foundCnt = 0; Square fParent = found;
+		    while (null != fParent) {
+			foundCnt++; fParent = fParent.parent;
+		    }
+		    System.out.println("foundCnt " + foundCnt);
+		    P9.show(sqG);
+		    int sqCnt = 0; Square fParent2 = sqS;
+		    while (null != fParent2) {
+			sqCnt++; fParent2 = fParent2.parent;
+		    }
+		    System.out.println("sqCnt " + sqCnt);
 		    System.exit(0);
 		}
 	    }
 	    P9.addToHashtable(sqG);
 	    exploreBack();	
 	}
-	// System.out.println("YYYY");
-	// alternate ??? not here this time
-	/*
-	if ( P9.direction )
-	    exploreForward();
-	else
-	    exploreBack();
-	*/
-    }
+    } // end explore
 	
     public void exploreForward() {
-	// System.out.println("AAAA");
+	// System.out.println("P9.cnt " + P9.cnt);
 	int locS = sqS.zeroLoc; // location of zero in sqS
-	// System.out.println("locS " + locS);
-	int [] moveS = sqS.find(); //
+	int [] moveS = sqS.findMoves(); //
 	int moveSlength = moveS.length; // always 4
 	//      P9.show(sqS);
 	Square [] nextSquares = new Square[moveSlength];
@@ -317,20 +294,42 @@ class Node9 {
 		// int k = sqS.state[j];
 		// System.out.println(k + " moveTo " + locS);
 		Square newSquare = new Square(sqS, j, sqS.forward);
-
 		// check whether newSquare is in hashtable
 		String key = P9.getKey(newSquare);
 		Square found = P9.squaresTable.get(key);
 		if ( null != found ) {
 		    if ( !found.forward ) {
-			System.out.println("Found backward");
+			System.out.println("P9.cnt " + P9.cnt);
+			System.out.println("Found backward found:");
 			P9.show(found);
-			P9.show(newSquare);
+			System.out.println("When created: " + found.cnt);
+			System.out.println("Hash size " +
+					   P9.squaresTable.size());
+
+			int foundCnt = 0; Square fParent = sqS;
+			Square p1 = fParent;
+			while (null != fParent) { p1 = fParent;
+			    foundCnt++; fParent = fParent.parent;
+			}
+			System.out.println("p1 - Source");
+			P9.show(p1);
+			System.out.println("foundCnt " + foundCnt);
+
+			P9.show(sqG); 
+			int sqCnt = 0; Square fParent2 = sqG;
+			Square p2 = fParent2;
+			while (null != fParent2) { p2 = fParent2;
+			    sqCnt++; fParent2 = fParent2.parent;
+			}
+			System.out.println("p2 - Goal");
+			P9.show(p2); 
+			System.out.println("sqCnt " + sqCnt);
 			System.exit(0);
-		    }			
-		    continue;
+		    } 
+		    continue; // ignore because encounterd earlier 
 		}
 		newSquare.parent = sqS;
+		newSquare.cnt = P9.cnt;
 		newSquare.previousZeroLoc = locS;
 		// System.out.println("EEEE P9.show(newSquare)");
 		// P9.show(newSquare);
@@ -341,10 +340,10 @@ class Node9 {
 
 	// System.out.println("newSquareCnt: " + newSquareCnt);
 	// put in Hashtable
-	System.out.println(" newSquareCnt " +  newSquareCnt);
+	// System.out.println(" newSquareCnt " +  newSquareCnt);
 	if ( 0 == newSquareCnt ) {
-	    System.out.println("0 == newSquareCnt");
-	    System.out.println("P9.cnt" + P9.cnt);
+	    // System.out.println("0 == newSquareCnt");
+	    // System.out.println("P9.cnt" + P9.cnt);
 	    return;
 	}
 	/*
@@ -366,7 +365,7 @@ class Node9 {
     public void exploreBack() {
 	int locG = sqG.zeroLoc; // location of zero in sqG
 	// System.out.println("locS " + locS);
-	int [] moveG = sqG.find(); //
+	int [] moveG = sqG.findMoves(); //
 	int moveGlength = moveG.length; // always 4
 	// P9.show(sqG);
 	Square [] nextSquares = new Square[moveGlength];
@@ -387,26 +386,48 @@ class Node9 {
 		Square found = P9.squaresTable.get(key);
 		if ( null != found ) {
 		    if ( found.forward ) {
-			System.out.println("Found forward");
+			System.out.println("P9.cnt " + P9.cnt);
+			System.out.println("Found forward found:");	
 			P9.show(found);
-			P9.show(newSquare);
+			System.out.println("When created: " + found.cnt);
+			System.out.println("Hash size " +
+					   P9.squaresTable.size());
+			int foundCnt = 0; Square fParent = sqS;
+			Square p1 = fParent;
+			while (null != fParent) { p1 = fParent;
+			    foundCnt++; fParent = fParent.parent;
+			}
+			System.out.println("p1 - Source");
+			P9.show(p1);
+			System.out.println("foundCnt " + foundCnt);
+
+			P9.show(sqS);
+			int sqCnt = 0; Square fParent2 = sqG;
+			Square p2 = fParent2;
+			while (null != fParent2) { p2 = fParent2;
+			    sqCnt++; fParent2 = fParent2.parent;
+			}
+			System.out.println("p2 - Goal");
+			P9.show(p2); 
+			System.out.println("sqCnt " + sqCnt);
 			System.exit(0);
-		    }		
-		    continue;
-		}
+		    }  
+		    continue; // ignore because encounterd earlier 
+		}	
 		newSquare.parent = sqG;
+		newSquare.cnt = P9.cnt;
 		newSquare.previousZeroLoc = locG;
 		// P9.show(newSquare);
 		nextSquares[newSquareCnt] = newSquare;
 		newSquareCnt++;
 	    }
 	}
-	System.out.println("newSquareCnt: " + newSquareCnt);
+	// System.out.println("newSquareCnt: " + newSquareCnt);
 	// put in Hashtable
 	// System.out.println(" newSquareCnt " +  newSquareCnt);
 	if ( 0 == newSquareCnt ) {
-	    System.out.println("0 == newSquareCnt");
-	    System.out.println("P9.cnt" + P9.cnt);
+	    // System.out.println("0 == newSquareCnt");
+	    // System.out.println("P9.cnt" + P9.cnt);
 	    return;
 	}
 	/*
@@ -425,186 +446,6 @@ class Node9 {
 
     } // end exploreBack
 
-
 } // end Node9
 
 
-// OLD stuff for parallel processing - perhaps.
-    /*
-    // void move(int state) {
-	/*
-	System.out.println("\nmoveCnt " + Knight7.moveCnt);
-	System.out.println("state " + state);
-	// System.out.println("zeroCnt " + zeroCnt);
-	Tile7 tile = Knight7.board[state]; // ????????? delete
-	System.out.println("pos " + tile.getPos());
-	System.out.println("tilesCnt " + Knight7.tilesCnt);
-	System.out.println("fCnt " + Knight7.fCnt + " bCnt " + Knight7.bCnt);
-	Knight7.show(); 
-	// if ( 21 <= Knight7.moveCnt ) System.exit(0);
-	// */
-
-	// ***************************
-	// add synchronized +++++++++++++++++++++++++++=
-	// ***************************
-	/*
-	synchronized(Knight7.oTilesCnt) {
-	    if ( Knight7.tilesCnt == Knight7.maxTilesSet ) {
-
-		int [] neighbors = getAllNeighbors(state );
-		boolean found = false;
-		int goalTile = (moveForward ? Knight7.bCnt : Knight7.fCnt);
-		for ( int j = 1; j <= neighbors[0] ; j++ ) {
-		    if ( goalTile == Knight7.board[neighbors[j]].getPos() ) {
-			found = true; break;
-		    }
-		}
-		if ( found ) {
-		    synchronized(Knight7.oSolutionCnt) {
-			Knight7.solutionCnt++; }
-		    // System.out.println("solutionCnt " + Knight7.solutionCnt);
-		    if ( 0 == Knight7.solutionCnt%1000) {
-			long diff = System.currentTimeMillis() - Knight7.startTime;
-			long delta = diff/ Knight7.solutionCnt;
-			System.out.println("solutionCnt " + Knight7.solutionCnt + 
-					   " delta " + delta);
-		    }
-		}
-		// if ( 100 < Knight7.solutionCnt ) Knight3.done = true;
-		/ * // display the solution
-		   System.out.println("\nmove moveCnt " + Knight7.moveCnt);
-		   System.out.println("move tilesCnt " + Knight7.tilesCnt);
-		   System.out.println("move goalTile " + goalTile);
-		   Knight7.show();
-		   // System.out.println("move goal state!!!!");
-		   if ( 0 < Knight7.solutionCnt ) System.exit(0);
-		   // * /
-		return;
-	    }
-	}
-
-    	synchronized(Knight7.oTilesCnt) {
-	    if ( Knight7.tilesCnt == Knight7.targetTilesSet ) {
-		int zeroTile = findZeroTile(state); // fetch unique tile
-		Knight7.tilesCnt++;
-		if ( moveForward ) {
-		    Knight7.fCnt = Knight7.fCnt + 2;
-		    Knight7.board[zeroTile].setPos(Knight7.fCnt);
-		} else {
-		    Knight7.bCnt = Knight7.bCnt + 2;
-		    Knight7.board[zeroTile].setPos(Knight7.bCnt);
-		}
-		Node7 node7 =  new Node7(moveForward, zeroTile);
-		node7.move(node7.state); // state??
-		Knight7.tilesCnt--;
-		if ( moveForward ) {
-		    Knight7.fCnt = Knight7.fCnt - 2;
-		    Knight7.board[zeroTile].setPos(0);
-		} else {
-		    Knight7.bCnt = Knight7.bCnt + 2;
-		    Knight7.board[zeroTile].setPos(0);
-		}
-		return;
-	    }
-	}
-	// go deeper
-  	for ( int k = 0; k < zeroCnt; k++ ) {
-	    if ( Knight7.done ) return;
-	    int nextIdx = moves[k];
-	    // check whether it is safe to move to nextIdx
-	    boolean hasFreeCell = hasFreeCell(nextIdx); 
-	    if ( !hasFreeCell ) continue;
-	    // check whether a cell will become unreachable
-	    if ( Knight7.tilesCnt <= Knight7.chokeParam ) {
-		// if ( Knight3.tilesCnt <= 33 ) { //6x6
-		// if ( Knight3.tilesCnt <= 60 ) { //8x8
-		boolean found = false;
-		for ( int z = 0; z < Knight7.numMoves; z++ ) {
-		    int idxz = getNeighbor(nextIdx, z);
-		    if ( 0 != Knight7.board[idxz].getPos() ) continue; // no worry
-		    int numFreeCellsz = numFreeCells(idxz);
-		    if ( numFreeCellsz <= 1 ) { found = true; break; }
-		}
-		if ( found ) continue;
-	    }
-	    synchronized(Knight7.oTilesCnt) { Knight7.tilesCnt++; }
-	    if ( moveForward ) {
-		Knight7.fCnt = Knight7.fCnt + 2;
-		Knight7.board[nextIdx].setPos(Knight7.fCnt);
-	    } else {
-		Knight7.bCnt = Knight7.bCnt + 2;
-		Knight7.board[nextIdx].setPos(Knight7.bCnt);
-	    }
-	    Node7 node7 = new Node7(moveForward, nextIdx);
-	    node7.move(node7.state); // state??
-	    synchronized(Knight7.oTilesCnt) { Knight7.tilesCnt--; }
-	    Knight7.board[nextIdx].setPos(0);
-	    if ( moveForward ) Knight7.fCnt = Knight7.fCnt - 2;
-	    else Knight7.bCnt = Knight7.bCnt - 2;
-	} // end for loop
-	return;
-
-	/ *
-	System.out.println("EXIT moveCnt " + Knight7.moveCnt);
-	System.exit(0);
-	* /
-    } // end move
-
- 
-    int numFreeCells(int nextIdx) {
-	int cnt = 0;
-	for ( int k = 0; k < Knight7.numMoves; k++ ) {
-	    int idxk = getNeighbor(nextIdx, k);
-	    if ( 0 == Knight7.board[idxk].getPos() ) cnt++;
-	}
-	// System.out.println("numFreeCells  nextIdx " + nextIdx + 
-        // " cnt " + cnt);
-	return cnt;
-    } // end numFreeCells
-
-    int getNeighbor(int idx, int k) { 
-	    return idx + Knight7.candidateMoves[k]; }
-    void findMoves(int [] moves, int idx) {
-	// set zeroCnt and puts in moves candidate moves
-	zeroCnt = 0;
-	// System.out.println("findMoves(idx) " + idx);
-	for ( int k = 0; k < Knight7.numMoves; k++ ) {
-	    int idxk = getNeighbor(idx, k);
-	    // System.out.println("idxk " + idxk + " board[idxk] " + board[idxk]);
-	    if ( 0 == Knight7.board[idxk].getPos() ) { // candidate loc
-		moves[zeroCnt] = idxk;
-		zeroCnt++;
-	    }
-        } 
-    } // end findMoves
-
-    // check against the next one
-    int findZeroTile(int target) {
-	int out = 0;
-	for ( int k = 0; k < Knight7.numMoves; k++ ) {
-	    int targetNeighbor = getNeighbor(target, k);
-	    if ( 0 == Knight7.board[targetNeighbor].getPos() ) { 
-		out = targetNeighbor;
-		break;
-	    }
-	}
-	return out;
-    } // end findZeroTile
-
-    int [] getAllNeighbors(int targetTile) {
-	Tile7 t = Knight7.board[targetTile];
-	return t.theNeighbors;
-    } // end getAllNeighbors
-
-    boolean hasFreeCell(int nextIdx) {
-	boolean out = false;
-	for ( int k = 0; k < Knight7.numMoves; k++ ) {
-	    int idxk = getNeighbor(nextIdx, k);
-	    if ( 0 == Knight7.board[idxk].getPos() ) { out = true; break; }
-	}
-	return out;
-    }
-} // end Node7
-
-}
-	*/
